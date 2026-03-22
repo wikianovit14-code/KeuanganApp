@@ -3452,16 +3452,89 @@ function deleteTransaksi(id) {
 }
 
 let _pendingStruk = null;
+
+// ===========================
+// AUTO RESIZE IMAGE UTILITY
+// ===========================
+function resizeImage(file, maxSizeKB, maxWidth, maxHeight, quality) {
+  // maxSizeKB: target max size in KB
+  // maxWidth/maxHeight: max dimensions
+  // quality: 0.0 - 1.0 JPEG quality
+  return new Promise((resolve) => {
+    // PDF - skip resize
+    if (file.type === 'application/pdf') {
+      const reader = new FileReader();
+      reader.onload = ev => resolve({ data: ev.target.result, name: file.name, type: file.type, sizeKB: Math.round(file.size/1024) });
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = new Image();
+      img.onload = function() {
+        // Calculate new dimensions
+        let w = img.width, h = img.height;
+        if (w > maxWidth || h > maxHeight) {
+          const ratio = Math.min(maxWidth/w, maxHeight/h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // Try compressing until under maxSizeKB
+        let q = quality || 0.8;
+        let dataUrl = canvas.toDataURL('image/jpeg', q);
+        let sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+
+        // If still too large, reduce quality iteratively
+        while (sizeKB > maxSizeKB && q > 0.2) {
+          q -= 0.1;
+          dataUrl = canvas.toDataURL('image/jpeg', q);
+          sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+        }
+
+        resolve({
+          data: dataUrl,
+          name: file.name.replace(/\.[^.]+$/, '.jpg'),
+          type: 'image/jpeg',
+          sizeKB,
+          originalSizeKB: Math.round(file.size / 1024),
+          resized: true
+        });
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatKB(kb) {
+  return kb >= 1024 ? (kb/1024).toFixed(1) + ' MB' : kb + ' KB';
+}
+
 function handleStrukUpload(e) {
   const f = e.target.files[0];
   if (!f) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    _pendingStruk = { name: f.name, type: f.type, data: ev.target.result };
-    document.getElementById('struk-label').textContent = '✅ ' + f.name;
-    document.getElementById('struk-label').style.color = 'var(--green)';
-  };
-  reader.readAsDataURL(f);
+
+  const label = document.getElementById('struk-label');
+  if (label) { label.textContent = '⏳ Memproses foto...'; label.style.color = 'var(--orange)'; }
+
+  // Struk: resize to max 600KB, 1200x1600px
+  resizeImage(f, 600, 1200, 1600, 0.82).then(result => {
+    _pendingStruk = { name: result.name, type: result.type, data: result.data };
+    const saved = formatKB(result.sizeKB);
+    const orig = formatKB(result.originalSizeKB || result.sizeKB);
+    const txt = result.resized
+      ? `✅ ${result.name} (${orig} → ${saved})`
+      : `✅ ${result.name} (${saved})`;
+    if (label) { label.textContent = txt; label.style.color = 'var(--green)'; }
+  });
 }
 
 function viewStruk(id) {
@@ -3883,20 +3956,25 @@ function updateATMTotal() {
 function handleATMStruk(e) {
   const f = e.target.files[0];
   if (!f) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const src = ev.target.result;
-    const img = document.getElementById('atm-struk-img');
+
+  showToast('⏳ Memproses foto struk...');
+
+  // ATM struk: resize to max 600KB, 1200x1600px
+  resizeImage(f, 600, 1200, 1600, 0.82).then(result => {
+    const imgEl = document.getElementById('atm-struk-img');
     const preview = document.getElementById('atm-struk-preview');
     const form = document.getElementById('atm-struk-form');
-    if (img) { img.src = src; }
+    if (imgEl) { imgEl.src = result.data; imgEl.setAttribute('data-struk', JSON.stringify({name:result.name, type:result.type, data:result.data})); }
     if (preview) preview.style.display = 'block';
     if (form) form.style.display = 'block';
-    // Set default date to today
     document.getElementById('atm-struk-tgl').value = today();
-    showToast('Struk diupload! Periksa dan sesuaikan data.');
-  };
-  reader.readAsDataURL(f);
+    const saved = formatKB(result.sizeKB);
+    const orig = formatKB(result.originalSizeKB || result.sizeKB);
+    const msg = result.resized
+      ? `✅ Struk dikompresi: ${orig} → ${saved}`
+      : `✅ Struk diupload (${saved})`;
+    showToast(msg);
+  });
 }
 
 // Save ATM transaction
@@ -3923,6 +4001,15 @@ function simpanTransaksiATM() {
 
   const rek = store.rekening.find(r=>r.id==rekId);
   if (!rek) return showToast('Rekening tidak ditemukan!','red');
+
+  // Get struk data from image element if tab struk
+  let strukData = null;
+  if (activeTab === 'struk') {
+    const imgEl = document.getElementById('atm-struk-img');
+    if (imgEl && imgEl.getAttribute('data-struk')) {
+      try { strukData = JSON.parse(imgEl.getAttribute('data-struk')); } catch(e) {}
+    }
+  }
 
   const biaya = BIAYA_TRANSFER[jenis] || 0;
   const isDebit = jenis !== 'Setor Tunai'; // Setor = kredit, lainnya = debit
@@ -3951,7 +4038,7 @@ function simpanTransaksiATM() {
     ket: `[${rek.bank}] ${ket}`,
     jenis: jenisTransaksi,
     nominal: nominal,
-    struk: null,
+    struk: strukData || null,
     rekeningId: rek.id,
   });
 
@@ -4345,15 +4432,21 @@ function triggerPhotoUpload(context) {
 function handlePhotoUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const src = ev.target.result;
-    store.profilePhoto = src;
+
+  showToast('⏳ Memproses foto profil...');
+
+  // Profile photo: resize to max 200KB, 400x400px (square crop feel)
+  resizeImage(file, 200, 400, 400, 0.85).then(result => {
+    store.profilePhoto = result.data;
     saveStore();
-    updateAllAvatars(src);
-    showToast('Foto profil berhasil diupload!');
-  };
-  reader.readAsDataURL(file);
+    updateAllAvatars(result.data);
+    const saved = formatKB(result.sizeKB);
+    const orig = formatKB(result.originalSizeKB || result.sizeKB);
+    const msg = result.resized
+      ? `📷 Foto profil disimpan! (${orig} → ${saved})`
+      : `📷 Foto profil disimpan! (${saved})`;
+    showToast(msg);
+  });
 }
 
 function updateAllAvatars(src) {
