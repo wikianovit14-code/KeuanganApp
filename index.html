@@ -2325,22 +2325,68 @@ table tbody tr:hover { background: #fafafa; }
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Ikon</label>
-          <select id="dom-icon">
-            <option value="💵">💵 Uang Tunai</option>
-            <option value="🔵">🔵 Dana</option>
-            <option value="🟣">🟣 OVO</option>
-            <option value="🟢">🟢 GoPay</option>
-            <option value="🟠">🟠 ShopeePay</option>
-            <option value="💙">💙 LinkAja</option>
-            <option value="🏦">🏦 Bank</option>
-            <option value="💳">💳 Kartu</option>
-            <option value="👛">👛 Dompet</option>
-          </select>
+          <label>Ikon / Logo</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <select id="dom-icon" onchange="previewDomIcon()" style="flex:1;">
+              <optgroup label="💰 E-Wallet Indonesia">
+                <option value="🔵">🔵 Dana</option>
+                <option value="🟣">🟣 OVO</option>
+                <option value="🟢">🟢 GoPay</option>
+                <option value="🟠">🟠 ShopeePay</option>
+                <option value="💙">💙 LinkAja</option>
+                <option value="🔶">🔶 DOKU</option>
+                <option value="🟡">🟡 Jenius</option>
+                <option value="🔷">🔷 FLIP</option>
+              </optgroup>
+              <optgroup label="🏦 Bank">
+                <option value="🏦">🏦 Bank (Umum)</option>
+                <option value="🟢">🟢 BCA</option>
+                <option value="🔵">🔵 Mandiri</option>
+                <option value="🟠">🟠 BRI</option>
+                <option value="🔴">🔴 BNI</option>
+                <option value="🟤">🟤 BSI</option>
+                <option value="⚫">⚫ Bank Jambi</option>
+              </optgroup>
+              <optgroup label="💵 Tunai & Lainnya">
+                <option value="💵">💵 Uang Tunai</option>
+                <option value="👛">👛 Dompet</option>
+                <option value="💳">💳 Kartu Kredit/Debit</option>
+                <option value="🪙">🪙 Koin</option>
+                <option value="💴">💴 Mata Uang Asing</option>
+              </optgroup>
+              <optgroup label="📱 Digital Lainnya">
+                <option value="📱">📱 Digital Umum</option>
+                <option value="💎">💎 Kripto/Investasi</option>
+                <option value="📊">📊 Saham/Reksadana</option>
+                <option value="🏠">🏠 Properti</option>
+                <option value="🚗">🚗 Kendaraan</option>
+              </optgroup>
+            </select>
+            <div id="dom-icon-preview" style="font-size:28px;min-width:36px;text-align:center;">🔵</div>
+          </div>
+          <div style="margin-top:6px;display:flex;gap:6px;align-items:center;">
+            <input type="text" id="dom-icon-custom" placeholder="Atau ketik emoji sendiri, misal: 🌟" 
+              style="flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;"
+              oninput="if(this.value.trim()){document.getElementById('dom-icon-preview').textContent=this.value.trim();}">
+          </div>
+          <div style="font-size:10px;color:#aaa;margin-top:3px;">💡 Bisa ketik emoji apapun di kotak bawah</div>
         </div>
         <div class="form-group">
           <label>Warna Kartu</label>
-          <input type="color" id="dom-warna" value="#9b59b6" style="height:38px;border-radius:4px;border:1px solid #ddd;width:100%;cursor:pointer;">
+          <input type="color" id="dom-warna" value="#9b59b6" style="height:38px;border-radius:4px;border:1px solid #ddd;width:100%;cursor:pointer;" oninput="updateDomWarnaPreview()">
+          <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">
+            <div onclick="setDomWarna('#0066ff')" style="width:22px;height:22px;background:#0066ff;border-radius:50%;cursor:pointer;" title="Dana Biru"></div>
+            <div onclick="setDomWarna('#4b0082')" style="width:22px;height:22px;background:#4b0082;border-radius:50%;cursor:pointer;" title="OVO Ungu"></div>
+            <div onclick="setDomWarna('#00aa13')" style="width:22px;height:22px;background:#00aa13;border-radius:50%;cursor:pointer;" title="GoPay Hijau"></div>
+            <div onclick="setDomWarna('#ee4d2d')" style="width:22px;height:22px;background:#ee4d2d;border-radius:50%;cursor:pointer;" title="Shopee Orange"></div>
+            <div onclick="setDomWarna('#e8192c')" style="width:22px;height:22px;background:#e8192c;border-radius:50%;cursor:pointer;" title="LinkAja Merah"></div>
+            <div onclick="setDomWarna('#005f2d')" style="width:22px;height:22px;background:#005f2d;border-radius:50%;cursor:pointer;" title="BCA Hijau Tua"></div>
+            <div onclick="setDomWarna('#003d8f')" style="width:22px;height:22px;background:#003d8f;border-radius:50%;cursor:pointer;" title="Mandiri Biru"></div>
+            <div onclick="setDomWarna('#f37021')" style="width:22px;height:22px;background:#f37021;border-radius:50%;cursor:pointer;" title="BRI Orange"></div>
+            <div onclick="setDomWarna('#ef272f')" style="width:22px;height:22px;background:#ef272f;border-radius:50%;cursor:pointer;" title="BNI Merah"></div>
+            <div onclick="setDomWarna('#27ae60')" style="width:22px;height:22px;background:#27ae60;border-radius:50%;cursor:pointer;" title="Hijau"></div>
+            <div onclick="setDomWarna('#1a1a2e')" style="width:22px;height:22px;background:#1a1a2e;border-radius:50%;cursor:pointer;border:1px solid #ddd;" title="Hitam"></div>
+          </div>
         </div>
       </div>
       <div class="form-row">
@@ -3286,6 +3332,8 @@ function toggleDarkMode() {
   localStorage.setItem('ka_dark_mode', isDark ? '1' : '0');
   const btn = document.getElementById('dark-toggle');
   if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+  // Re-init chart to update colors
+  if (mainChart) initChart();
 }
 
 // ===========================
@@ -3624,11 +3672,22 @@ function getChartData(period, jenis) {
   return labels.map(()=>0);
 }
 
+function getChartColors() {
+  const isDark = document.body.classList.contains('dark-mode');
+  return {
+    textColor: isDark ? '#cccccc' : '#555555',
+    gridColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+    gridDash: isDark ? [4,4] : [3,3],
+  };
+}
+
 function initChart() {
   const ctx = document.getElementById('mainChart').getContext('2d');
   if (mainChart) mainChart.destroy();
-  
+
   const labels = getChartLabels(currentChartPeriod);
+  const { textColor, gridColor, gridDash } = getChartColors();
+
   mainChart = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -3640,20 +3699,31 @@ function initChart() {
       ]
     },
     options: {
-      responsive:true,
+      responsive: true,
       plugins: {
-        legend: {position:'top', labels:{boxWidth:14, font:{size:11}}},
+        legend: {
+          position: 'top',
+          labels: { boxWidth:14, font:{size:11}, color: textColor }
+        },
         tooltip: {
-          callbacks: {
-            label: ctx => ' ' + fmtRp(ctx.raw)
-          }
+          callbacks: { label: ctx => ' ' + fmtRp(ctx.raw) }
         }
       },
       scales: {
-        x: {grid:{display:false}},
+        x: {
+          grid: { display: false },
+          ticks: { color: textColor, font:{size:11} }
+        },
         y: {
           beginAtZero: true,
+          grid: {
+            color: gridColor,
+            borderDash: gridDash,
+            drawBorder: false,
+          },
           ticks: {
+            color: textColor,
+            font: { size: 11 },
             maxTicksLimit: 8,
             callback: v => {
               if (v >= 1000000000) return 'Rp.' + (v/1000000000).toFixed(1) + 'M';
@@ -4021,6 +4091,8 @@ function saveTransaksi() {
     }
   }
 
+  // Baca targetId di awal (fix: sebelumnya dibaca setelah push)
+  const targetId = document.getElementById('tr-target-id')?.value || '';
   const sumberObj = sumberId ? getDompetById(sumberId) : null;
   const sumberNama = sumberObj ? sumberObj.nama : '';
 
@@ -4033,6 +4105,14 @@ function saveTransaksi() {
       sumberNama: sumberNama||existing.sumberNama,
       targetId: jenis==='Tabungan' ? (targetId||existing.targetId||'') : ''};
   } else {
+    // Validasi saldo untuk Tabungan juga (uang keluar dari dompet)
+    if (sumberId && (jenis === 'Pengeluaran' || jenis === 'Tabungan')) {
+      const src = getDompetById(sumberId);
+      if (src && src.saldo < nominal) {
+        return showToast(`Saldo ${src.nama} tidak cukup! Saldo: ${fmtRpShort(src.saldo)}`, 'red');
+      }
+    }
+
     store.transaksi.push({id:store.nextId.tr++, tgl,
       jam: jam||new Date().toTimeString().slice(0,8),
       kat, jenis, ket, nominal,
@@ -4040,9 +4120,11 @@ function saveTransaksi() {
       sumberId: sumberId||null,
       sumberNama,
       targetId: jenis==='Tabungan' ? targetId : ''});
+
     // Update dompet saldo
     if (sumberId && sumberObj) {
-      const delta = jenis==='Pemasukan' ? nominal : jenis==='Pengeluaran' ? -nominal : 0;
+      // Pemasukan = +saldo, Pengeluaran = -saldo, Tabungan = -saldo (uang keluar ke tabungan)
+      const delta = jenis==='Pemasukan' ? nominal : (jenis==='Pengeluaran'||jenis==='Tabungan') ? -nominal : 0;
       if (delta !== 0) {
         updateDompetSaldo(sumberId, delta);
         const afterObj = getDompetById(sumberId);
@@ -4055,14 +4137,13 @@ function saveTransaksi() {
         });
       }
     }
+
+    // Auto update target tabungan
+    if (jenis === 'Tabungan') {
+      autoUpdateTargetTabungan(nominal, kat, targetId);
+    }
   }
   _pendingStruk = null;
-  
-  // Auto update target tabungan if jenis=Tabungan
-  const targetId = document.getElementById('tr-target-id')?.value || '';
-  if (jenis === 'Tabungan' && !editId) {
-    autoUpdateTargetTabungan(nominal, kat, targetId);
-  }
 
   saveStore();
   closeModal('modalTransaksi');
@@ -4835,10 +4916,23 @@ function renderDompetMutasi() {
   });
 }
 
+function previewDomIcon() {
+  const sel = document.getElementById('dom-icon');
+  const preview = document.getElementById('dom-icon-preview');
+  if (preview && sel) preview.textContent = sel.value;
+}
+function setDomWarna(color) {
+  const w = document.getElementById('dom-warna');
+  if (w) w.value = color;
+}
+function updateDomWarnaPreview() {} // placeholder
+
 function saveDompet() {
   const nama = document.getElementById('dom-nama').value.trim();
   const tipe = document.getElementById('dom-tipe').value;
-  const icon = document.getElementById('dom-icon').value;
+  // Custom emoji input takes priority over select
+  const customIcon = document.getElementById('dom-icon-custom')?.value?.trim();
+  const icon = customIcon || document.getElementById('dom-icon').value;
   const warna = document.getElementById('dom-warna').value;
   const saldo = getRawNum('dom-saldo');
   const editId = document.getElementById('dom-edit-id').value;
@@ -4865,7 +4959,18 @@ function editDompet(id) {
   document.getElementById('dom-edit-id').value = id;
   document.getElementById('dom-nama').value = d.nama;
   document.getElementById('dom-tipe').value = d.tipe;
-  document.getElementById('dom-icon').value = d.icon;
+  // Try to set select, fallback to custom input
+  const iconSel = document.getElementById('dom-icon');
+  const iconCustom = document.getElementById('dom-icon-custom');
+  const iconPreview = document.getElementById('dom-icon-preview');
+  const standardIcons = [...iconSel.options].map(o=>o.value);
+  if (standardIcons.includes(d.icon)) {
+    iconSel.value = d.icon;
+    if (iconCustom) iconCustom.value = '';
+  } else {
+    if (iconCustom) iconCustom.value = d.icon;
+  }
+  if (iconPreview) iconPreview.textContent = d.icon;
   document.getElementById('dom-warna').value = d.warna;
   setFmtInput('dom-saldo', d.saldo);
   openModal('modalDompet','Edit Dompet');
