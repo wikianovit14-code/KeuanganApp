@@ -1212,14 +1212,14 @@ table tbody tr:hover { background: #fafafa; }
 <!-- LOGIN PAGE -->
 <div id="login-page">
   <div class="login-box">
-    <div class="login-logo">Keuangan<span>App</span></div>
-    <div class="login-subtitle">Sistem Informasi Keuangan Pribadi</div>
-    <div style="font-size:40px;margin-bottom:20px;">🔐</div>
+    <div class="login-logo" id="login-app-name">Keuangan<span>App</span></div>
+    <div class="login-subtitle" id="login-app-subtitle">Sistem Informasi Keuangan Pribadi</div>
+    <div id="login-app-icon" style="font-size:40px;margin-bottom:20px;">🔐</div>
     <input type="text" class="login-input" id="login-user" placeholder="Username" autocomplete="username">
     <input type="password" class="login-input" id="login-pass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Masuk</button>
     <div class="login-error" id="login-error">❌ Username atau password salah!</div>
-    <div class="login-hint">Default: admin / admin123</div>
+    <div class="login-hint" id="login-custom-hint"></div>
   </div>
 </div>
 
@@ -1938,10 +1938,10 @@ table tbody tr:hover { background: #fafafa; }
       </div>
       <div class="info-grid">
         <div class="info-section">
-          <h4>🎨 Tampilan</h4>
+          <h4>🎨 Tampilan App</h4>
           <div class="form-group" style="margin-bottom:14px;">
             <label>Nama Aplikasi</label>
-            <input type="text" id="set-app-name" placeholder="KeuanganApp" value="KeuanganApp">
+            <input type="text" id="set-app-name" placeholder="KeuanganApp">
           </div>
           <div class="form-group" style="margin-bottom:14px;">
             <label>Warna Tema</label>
@@ -1964,6 +1964,139 @@ table tbody tr:hover { background: #fafafa; }
           </div>
           <button class="btn btn-success" onclick="saveAppSettings()">💾 Simpan Tampilan</button>
         </div>
+
+        <!-- Login Page Customization -->
+        <div class="info-section">
+          <h4>🔑 Kustomisasi Halaman Login</h4>
+          <div style="font-size:12px;color:#888;margin-bottom:12px;">Ubah tampilan halaman login yang dilihat sebelum masuk app</div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Nama App di Login</label>
+            <input type="text" id="set-login-appname" placeholder="KeuanganApp">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Subjudul Login</label>
+            <input type="text" id="set-login-subtitle" placeholder="Sistem Informasi Keuangan Pribadi">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Ikon Login (emoji)</label>
+            <input type="text" id="set-login-icon" placeholder="🔐" maxlength="4"
+              style="font-size:24px;text-align:center;width:80px;">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Background Login</label>
+
+            <!-- Tab mode selector -->
+            <div style="display:flex;background:#f0f2f5;border-radius:6px;padding:3px;margin:8px 0;">
+              <button onclick="switchBgMode('preset')" id="bgmode-preset" style="flex:1;padding:5px;border:none;border-radius:4px;background:var(--blue);color:#fff;font-family:var(--font-main);font-size:11px;cursor:pointer;font-weight:700;">🎨 Preset</button>
+              <button onclick="switchBgMode('custom')" id="bgmode-custom" style="flex:1;padding:5px;border:none;border-radius:4px;background:transparent;color:#888;font-family:var(--font-main);font-size:11px;cursor:pointer;">🎛️ Custom RGB</button>
+              <button onclick="switchBgMode('motif')" id="bgmode-motif" style="flex:1;padding:5px;border:none;border-radius:4px;background:transparent;color:#888;font-family:var(--font-main);font-size:11px;cursor:pointer;">✨ Motif</button>
+              <button onclick="switchBgMode('upload')" id="bgmode-upload" style="flex:1;padding:5px;border:none;border-radius:4px;background:transparent;color:#888;font-family:var(--font-main);font-size:11px;cursor:pointer;">🖼️ Gambar</button>
+            </div>
+
+            <!-- PRESET tab -->
+            <div id="bg-tab-preset">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+                <div onclick="setLoginBg('linear-gradient(135deg,#1e2a38,#2980b9)')" style="width:36px;height:36px;background:linear-gradient(135deg,#1e2a38,#2980b9);border-radius:8px;cursor:pointer;border:2px solid #ccc;" title="Biru (Default)"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#1a1a2e,#27ae60)')" style="width:36px;height:36px;background:linear-gradient(135deg,#1a1a2e,#27ae60);border-radius:8px;cursor:pointer;" title="Hijau"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#2d1b69,#8e44ad)')" style="width:36px;height:36px;background:linear-gradient(135deg,#2d1b69,#8e44ad);border-radius:8px;cursor:pointer;" title="Ungu"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#1a0a00,#e67e22)')" style="width:36px;height:36px;background:linear-gradient(135deg,#1a0a00,#e67e22);border-radius:8px;cursor:pointer;" title="Oranye"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#0d1117,#e74c3c)')" style="width:36px;height:36px;background:linear-gradient(135deg,#0d1117,#e74c3c);border-radius:8px;cursor:pointer;" title="Merah"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#0f2027,#16a085)')" style="width:36px;height:36px;background:linear-gradient(135deg,#0f2027,#16a085);border-radius:8px;cursor:pointer;" title="Teal"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#1a1a1a,#444)')" style="width:36px;height:36px;background:linear-gradient(135deg,#1a1a1a,#444);border-radius:8px;cursor:pointer;" title="Hitam"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#f093fb,#f5576c)')" style="width:36px;height:36px;background:linear-gradient(135deg,#f093fb,#f5576c);border-radius:8px;cursor:pointer;" title="Pink"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#4facfe,#00f2fe)')" style="width:36px;height:36px;background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:8px;cursor:pointer;" title="Cyan"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#43e97b,#38f9d7)')" style="width:36px;height:36px;background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:8px;cursor:pointer;" title="Mint"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#fa709a,#fee140)')" style="width:36px;height:36px;background:linear-gradient(135deg,#fa709a,#fee140);border-radius:8px;cursor:pointer;" title="Sunset"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#a18cd1,#fbc2eb)')" style="width:36px;height:36px;background:linear-gradient(135deg,#a18cd1,#fbc2eb);border-radius:8px;cursor:pointer;" title="Lavender"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#fccb90,#d57eeb)')" style="width:36px;height:36px;background:linear-gradient(135deg,#fccb90,#d57eeb);border-radius:8px;cursor:pointer;" title="Peach"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#30cfd0,#667eea)')" style="width:36px;height:36px;background:linear-gradient(135deg,#30cfd0,#667eea);border-radius:8px;cursor:pointer;" title="Aurora"></div>
+                <div onclick="setLoginBg('linear-gradient(to bottom,#000000,#434343)')" style="width:36px;height:36px;background:linear-gradient(to bottom,#000,#434343);border-radius:8px;cursor:pointer;" title="Dark Fade"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#11998e,#38ef7d)')" style="width:36px;height:36px;background:linear-gradient(135deg,#11998e,#38ef7d);border-radius:8px;cursor:pointer;" title="Forest"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#c94b4b,#4b134f)')" style="width:36px;height:36px;background:linear-gradient(135deg,#c94b4b,#4b134f);border-radius:8px;cursor:pointer;" title="Deep Red"></div>
+                <div onclick="setLoginBg('linear-gradient(135deg,#373b44,#4286f4)')" style="width:36px;height:36px;background:linear-gradient(135deg,#373b44,#4286f4);border-radius:8px;cursor:pointer;" title="Steel Blue"></div>
+              </div>
+            </div>
+
+            <!-- CUSTOM RGB tab -->
+            <div id="bg-tab-custom" style="display:none;">
+              <div style="font-size:11px;color:#888;margin-bottom:8px;">Pilih 2 atau 3 warna untuk digabung jadi gradient</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+                <div>
+                  <div style="font-size:11px;color:#555;margin-bottom:4px;">Warna 1 *</div>
+                  <input type="color" id="rgb-c1" value="#1e2a38" oninput="updateCustomGradient()" style="width:100%;height:36px;border-radius:4px;border:1px solid #ddd;cursor:pointer;">
+                </div>
+                <div>
+                  <div style="font-size:11px;color:#555;margin-bottom:4px;">Warna 2 *</div>
+                  <input type="color" id="rgb-c2" value="#2980b9" oninput="updateCustomGradient()" style="width:100%;height:36px;border-radius:4px;border:1px solid #ddd;cursor:pointer;">
+                </div>
+                <div>
+                  <div style="font-size:11px;color:#555;margin-bottom:4px;">Warna 3 (opsional)</div>
+                  <input type="color" id="rgb-c3" value="#1abc9c" oninput="updateCustomGradient()" style="width:100%;height:36px;border-radius:4px;border:1px solid #ddd;cursor:pointer;">
+                  <label style="font-size:10px;display:flex;align-items:center;gap:4px;margin-top:4px;cursor:pointer;">
+                    <input type="checkbox" id="rgb-c3-on" onchange="updateCustomGradient()"> Aktifkan
+                  </label>
+                </div>
+              </div>
+              <div style="margin-bottom:8px;">
+                <div style="font-size:11px;color:#555;margin-bottom:4px;">Arah Gradient</div>
+                <select id="rgb-dir" onchange="updateCustomGradient()" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px;width:100%;">
+                  <option value="135deg">↘ Diagonal (default)</option>
+                  <option value="to right">→ Kanan</option>
+                  <option value="to bottom">↓ Bawah</option>
+                  <option value="to left">← Kiri</option>
+                  <option value="45deg">↗ Anti-diagonal</option>
+                  <option value="180deg">↑ Atas</option>
+                </select>
+              </div>
+              <div id="rgb-preview-bar" style="height:40px;border-radius:6px;margin-top:4px;border:1px solid #ddd;"></div>
+              <button onclick="applyCustomGradient()" class="btn btn-primary" style="margin-top:8px;width:100%;font-size:12px;">✅ Pakai Gradient Ini</button>
+            </div>
+
+            <!-- MOTIF tab -->
+            <div id="bg-tab-motif" style="display:none;">
+              <div style="font-size:11px;color:#888;margin-bottom:8px;">Pilih motif/tekstur background</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+                <div onclick="setLoginBgCss('repeating-linear-gradient(45deg,#1e2a38 0,#1e2a38 10px,#2980b9 10px,#2980b9 20px)')" style="height:40px;background:repeating-linear-gradient(45deg,#1e2a38 0,#1e2a38 10px,#2980b9 10px,#2980b9 20px);border-radius:6px;cursor:pointer;border:2px solid transparent;" title="Garis Diagonal"></div>
+                <div onclick="setLoginBgCss('repeating-linear-gradient(0deg,#1e2a38 0,#1e2a38 8px,#2c3e50 8px,#2c3e50 16px)')" style="height:40px;background:repeating-linear-gradient(0deg,#1e2a38 0,#1e2a38 8px,#2c3e50 8px,#2c3e50 16px);border-radius:6px;cursor:pointer;" title="Garis Horizontal"></div>
+                <div onclick="setLoginBgCss('repeating-linear-gradient(90deg,#1e2a38 0,#1e2a38 8px,#2980b9 8px,#2980b9 16px)')" style="height:40px;background:repeating-linear-gradient(90deg,#1e2a38 0,#1e2a38 8px,#2980b9 8px,#2980b9 16px);border-radius:6px;cursor:pointer;" title="Garis Vertikal"></div>
+                <div onclick="setLoginBgCss('radial-gradient(circle at 20% 50%,#2980b9,#1e2a38 70%)')" style="height:40px;background:radial-gradient(circle at 20% 50%,#2980b9,#1e2a38 70%);border-radius:6px;cursor:pointer;" title="Radial"></div>
+                <div onclick="setLoginBgCss('radial-gradient(ellipse at top,#8e44ad,#1a1a2e),radial-gradient(ellipse at bottom,#2980b9,#1a1a2e)')" style="height:40px;background:radial-gradient(ellipse at top,#8e44ad,#1a1a2e);border-radius:6px;cursor:pointer;" title="Radial Ungu"></div>
+                <div onclick="setLoginBgCss('linear-gradient(135deg,#1e2a38 25%,transparent 25%) -20px 0,linear-gradient(225deg,#2980b9 25%,transparent 25%) -20px 0,linear-gradient(315deg,#1e2a38 25%,transparent 25%),linear-gradient(45deg,#2980b9 25%,transparent 25%);background-size:40px 40px;background-color:#1e2a38')" style="height:40px;background:repeating-conic-gradient(#1e2a38 0% 25%,#2980b9 0% 50%) 0 0/20px 20px;border-radius:6px;cursor:pointer;" title="Kotak-kotak"></div>
+                <div onclick="setLoginBgCss('conic-gradient(from 0deg at 50% 50%,#1e2a38,#2980b9,#8e44ad,#1e2a38)')" style="height:40px;background:conic-gradient(from 0deg at 50% 50%,#1e2a38,#2980b9,#8e44ad,#1e2a38);border-radius:6px;cursor:pointer;" title="Conic"></div>
+                <div onclick="setLoginBgCss('repeating-radial-gradient(circle,#1e2a38 0,#1e2a38 5px,#2980b9 5px,#2980b9 10px)')" style="height:40px;background:repeating-radial-gradient(circle,#1e2a38 0,#1e2a38 5px,#2980b9 5px,#2980b9 10px);border-radius:6px;cursor:pointer;" title="Lingkaran"></div>
+              </div>
+            </div>
+
+            <!-- UPLOAD tab -->
+            <div id="bg-tab-upload" style="display:none;">
+              <div style="font-size:11px;color:#888;margin-bottom:8px;">Upload gambar atau GIF untuk background login (max 2MB setelah kompresi)</div>
+              <div class="upload-zone" onclick="document.getElementById('login-bg-file').click()" style="padding:20px;text-align:center;cursor:pointer;">
+                <input type="file" id="login-bg-file" accept="image/*,.gif" style="display:none;" onchange="handleLoginBgUpload(event)">
+                <div id="login-bg-upload-label">🖼️ Klik untuk upload gambar / GIF</div>
+              </div>
+              <div id="login-bg-upload-preview" style="display:none;margin-top:8px;">
+                <img id="login-bg-img-preview" style="width:100%;border-radius:6px;max-height:120px;object-fit:cover;">
+                <button onclick="clearLoginBgImage()" class="btn btn-sm btn-danger" style="margin-top:6px;">🗑️ Hapus Gambar</button>
+              </div>
+              <div style="font-size:10px;color:#aaa;margin-top:6px;">Tip: Gunakan gambar gelap agar teks login tetap terbaca</div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Teks Hint (opsional — kosongkan jika tidak mau tampil)</label>
+            <input type="text" id="set-login-hint" placeholder="Kosongkan untuk tidak tampilkan hint">
+          </div>
+          <!-- Preview -->
+          <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;">
+            <div style="font-size:11px;color:#888;margin-bottom:8px;">Preview Login:</div>
+            <div id="login-preview" style="border-radius:8px;padding:14px;text-align:center;background:linear-gradient(135deg,#1e2a38,#2980b9);">
+              <div id="prev-icon" style="font-size:28px;margin-bottom:4px;">🔐</div>
+              <div id="prev-name" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;letter-spacing:1px;">KeuanganApp</div>
+              <div id="prev-sub" style="font-size:11px;color:rgba(255,255,255,.6);">Sistem Informasi Keuangan Pribadi</div>
+            </div>
+          </div>
+          <button class="btn btn-success" onclick="saveLoginSettings()">💾 Simpan Tampilan Login</button>
+        </div>
+
         <div class="info-section">
           <h4>🔐 Keamanan Akun</h4>
           <div class="form-group" style="margin-bottom:12px;">
@@ -6345,11 +6478,213 @@ function setThemeColor(color) {
   if (header) header.style.background = color;
 }
 
+function switchBgMode(mode) {
+  ['preset','custom','motif','upload'].forEach(m => {
+    const tab = document.getElementById('bg-tab-'+m);
+    const btn = document.getElementById('bgmode-'+m);
+    if (tab) tab.style.display = m===mode ? 'block' : 'none';
+    if (btn) {
+      btn.style.background = m===mode ? 'var(--blue)' : 'transparent';
+      btn.style.color = m===mode ? '#fff' : '#888';
+      btn.style.fontWeight = m===mode ? '700' : '400';
+    }
+  });
+  if (mode === 'custom') updateCustomGradient();
+}
+
+function setLoginBg(css) {
+  localStorage.setItem('ka_login_bg', css);
+  localStorage.removeItem('ka_login_bg_img'); // clear image if any
+  applyBgToPreview(css, null);
+}
+
+function setLoginBgCss(css) {
+  setLoginBg(css);
+}
+
+function applyBgToPreview(css, imgData) {
+  const prev = document.getElementById('login-preview');
+  if (!prev) return;
+  if (imgData) {
+    prev.style.backgroundImage = `url(${imgData})`;
+    prev.style.backgroundSize = 'cover';
+    prev.style.backgroundPosition = 'center';
+  } else {
+    prev.style.backgroundImage = '';
+    prev.style.background = css;
+  }
+}
+
+function updateCustomGradient() {
+  const c1 = document.getElementById('rgb-c1')?.value || '#1e2a38';
+  const c2 = document.getElementById('rgb-c2')?.value || '#2980b9';
+  const c3on = document.getElementById('rgb-c3-on')?.checked;
+  const c3 = document.getElementById('rgb-c3')?.value || '#1abc9c';
+  const dir = document.getElementById('rgb-dir')?.value || '135deg';
+  const stops = c3on ? `${c1}, ${c2}, ${c3}` : `${c1}, ${c2}`;
+  const gradient = `linear-gradient(${dir}, ${stops})`;
+  const bar = document.getElementById('rgb-preview-bar');
+  if (bar) bar.style.background = gradient;
+}
+
+function applyCustomGradient() {
+  const c1 = document.getElementById('rgb-c1')?.value || '#1e2a38';
+  const c2 = document.getElementById('rgb-c2')?.value || '#2980b9';
+  const c3on = document.getElementById('rgb-c3-on')?.checked;
+  const c3 = document.getElementById('rgb-c3')?.value || '#1abc9c';
+  const dir = document.getElementById('rgb-dir')?.value || '135deg';
+  const stops = c3on ? `${c1}, ${c2}, ${c3}` : `${c1}, ${c2}`;
+  const gradient = `linear-gradient(${dir}, ${stops})`;
+  setLoginBg(gradient);
+  showToast('✅ Gradient diterapkan ke preview!');
+}
+
+function handleLoginBgUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const label = document.getElementById('login-bg-upload-label');
+  if (label) label.textContent = '⏳ Memproses gambar...';
+
+  // Resize image to max 800px, 300KB for bg
+  resizeImage(file, 300, 800, 600, 0.8).then(result => {
+    localStorage.setItem('ka_login_bg_img', result.data);
+    localStorage.removeItem('ka_login_bg');
+
+    // Show preview
+    const prevImg = document.getElementById('login-bg-img-preview');
+    const prevDiv = document.getElementById('login-bg-upload-preview');
+    if (prevImg) prevImg.src = result.data;
+    if (prevDiv) prevDiv.style.display = 'block';
+    if (label) label.textContent = `✅ ${result.name} (${formatKB(result.sizeKB)})`;
+
+    // Apply to login preview
+    applyBgToPreview(null, result.data);
+    showToast('✅ Gambar background diupload!');
+  });
+}
+
+function clearLoginBgImage() {
+  localStorage.removeItem('ka_login_bg_img');
+  const prevDiv = document.getElementById('login-bg-upload-preview');
+  const label = document.getElementById('login-bg-upload-label');
+  const fileInput = document.getElementById('login-bg-file');
+  if (prevDiv) prevDiv.style.display = 'none';
+  if (label) label.textContent = '🖼️ Klik untuk upload gambar / GIF';
+  if (fileInput) fileInput.value = '';
+  // Reset to default gradient
+  setLoginBg('linear-gradient(135deg,#1e2a38,#2980b9)');
+  showToast('Gambar background dihapus');
+}
+
+function saveLoginSettings() {
+  const appName = document.getElementById('set-login-appname')?.value.trim() || 'KeuanganApp';
+  const subtitle = document.getElementById('set-login-subtitle')?.value.trim() || 'Sistem Informasi Keuangan Pribadi';
+  const icon = document.getElementById('set-login-icon')?.value.trim() || '🔐';
+  const hint = document.getElementById('set-login-hint')?.value.trim() || '';
+  const bg = localStorage.getItem('ka_login_bg') || 'linear-gradient(135deg,#1e2a38,#2980b9)';
+
+  localStorage.setItem('ka_login_appname', appName);
+  localStorage.setItem('ka_login_subtitle', subtitle);
+  localStorage.setItem('ka_login_icon', icon);
+  localStorage.setItem('ka_login_hint', hint);
+
+  // Apply immediately
+  applyLoginCustom();
+  showToast('✅ Tampilan login berhasil disimpan!');
+}
+
+function applyLoginCustom() {
+  const appName = localStorage.getItem('ka_login_appname') || 'KeuanganApp';
+  const subtitle = localStorage.getItem('ka_login_subtitle') || 'Sistem Informasi Keuangan Pribadi';
+  const icon = localStorage.getItem('ka_login_icon') || '🔐';
+  const hint = localStorage.getItem('ka_login_hint') || '';
+  const bg = localStorage.getItem('ka_login_bg') || 'linear-gradient(135deg,#1e2a38,#2980b9)';
+  const bgImg = localStorage.getItem('ka_login_bg_img');
+
+  const nameEl = document.getElementById('login-app-name');
+  const subEl = document.getElementById('login-app-subtitle');
+  const iconEl = document.getElementById('login-app-icon');
+  const hintEl = document.getElementById('login-custom-hint');
+  const loginPage = document.getElementById('login-page');
+
+  if (nameEl) {
+    const parts = appName.match(/^(.+?)(App|APP|app)?$/);
+    nameEl.innerHTML = parts && parts[2] ? `${parts[1]}<span>${parts[2]}</span>` : appName;
+  }
+  if (subEl) subEl.textContent = subtitle;
+  if (iconEl) iconEl.textContent = icon;
+  if (hintEl) hintEl.textContent = hint;
+  if (loginPage) {
+    if (bgImg) {
+      loginPage.style.backgroundImage = `url(${bgImg})`;
+      loginPage.style.backgroundSize = 'cover';
+      loginPage.style.backgroundPosition = 'center';
+      loginPage.style.background = '';
+    } else {
+      loginPage.style.backgroundImage = '';
+      loginPage.style.background = bg;
+    }
+  }
+}
+
+function initLoginSettings() {
+  const appName = localStorage.getItem('ka_login_appname') || 'KeuanganApp';
+  const subtitle = localStorage.getItem('ka_login_subtitle') || 'Sistem Informasi Keuangan Pribadi';
+  const icon = localStorage.getItem('ka_login_icon') || '🔐';
+  const hint = localStorage.getItem('ka_login_hint') || '';
+  const bg = localStorage.getItem('ka_login_bg') || 'linear-gradient(135deg,#1e2a38,#2980b9)';
+
+  const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+  setVal('set-login-appname', appName);
+  setVal('set-login-subtitle', subtitle);
+  setVal('set-login-icon', icon);
+  setVal('set-login-hint', hint);
+
+  // Update preview
+  const prev = document.getElementById('login-preview');
+  const prevName = document.getElementById('prev-name');
+  const prevSub = document.getElementById('prev-sub');
+  const prevIcon = document.getElementById('prev-icon');
+  if (prev) prev.style.background = bg;
+  if (prevName) prevName.textContent = appName;
+  if (prevSub) prevSub.textContent = subtitle;
+  if (prevIcon) prevIcon.textContent = icon;
+
+  // Live preview on input
+  ['set-login-appname','set-login-subtitle','set-login-icon'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.oninput = () => {
+      if (id === 'set-login-appname' && prevName) prevName.textContent = el.value || 'KeuanganApp';
+      if (id === 'set-login-subtitle' && prevSub) prevSub.textContent = el.value;
+      if (id === 'set-login-icon' && prevIcon) prevIcon.textContent = el.value || '🔐';
+    };
+  });
+
+  // Restore image upload if exists
+  const bgImg = localStorage.getItem('ka_login_bg_img');
+  if (bgImg) {
+    const prevImg = document.getElementById('login-bg-img-preview');
+    const prevDiv = document.getElementById('login-bg-upload-preview');
+    const label = document.getElementById('login-bg-upload-label');
+    if (prevImg) prevImg.src = bgImg;
+    if (prevDiv) prevDiv.style.display = 'block';
+    if (label) label.textContent = '✅ Gambar tersimpan';
+    if (prev) { prev.style.backgroundImage = `url(${bgImg})`; prev.style.backgroundSize='cover'; prev.style.backgroundPosition='center'; }
+  }
+
+  // Init tabs
+  switchBgMode('preset');
+  updateCustomGradient();
+}
+
 function saveAppSettings() {
   const name = document.getElementById('set-app-name')?.value.trim() || 'KeuanganApp';
   localStorage.setItem('ka_app_name', name);
-  // Update logo
-  document.querySelector('#top-header .logo').innerHTML = name.replace('App','<span>App</span>');
+  // Update logo in header
+  const logo = document.querySelector('#top-header .logo');
+  if (logo) logo.innerHTML = name.replace(/App$/i, '<span>App</span>') !== name
+    ? name.replace(/App$/i, '<span>App</span>') : name;
   showToast('✅ Tampilan berhasil disimpan!');
 }
 
@@ -6412,6 +6747,7 @@ function initSettings() {
   if (setUser) setUser.value = localStorage.getItem('ka_username') || 'admin';
   const setName = document.getElementById('set-app-name');
   if (setName) setName.value = localStorage.getItem('ka_app_name') || 'KeuanganApp';
+  initLoginSettings();
 }
 
 function confirmLogout() {
@@ -6462,6 +6798,9 @@ function changePassword(oldPass, newPass) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Apply login customization
+  applyLoginCustom();
+
   // Apply saved theme color
   const savedColor = localStorage.getItem('ka_theme_color');
   if (savedColor) setThemeColor(savedColor);
