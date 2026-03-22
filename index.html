@@ -1504,25 +1504,57 @@ table tbody tr:hover { background: #fafafa; }
         <div class="page-title"><h2>💰 Hutang Piutang</h2></div>
         <button class="btn btn-danger" onclick="openModal('modalHutang','Tambah Hutang/Piutang')">➕ Tambah</button>
       </div>
+
+      <!-- Stats row -->
+      <div class="rek-stats" style="margin-bottom:14px;">
+        <div class="rek-stat-card red">
+          <div class="rsk-label">Total Hutang Aktif</div>
+          <div class="rsk-value" id="hp-stat-hutang">Rp. 0</div>
+        </div>
+        <div class="rek-stat-card" style="border-left-color:var(--blue)">
+          <div class="rsk-label">Total Piutang Aktif</div>
+          <div class="rsk-value" id="hp-stat-piutang">Rp. 0</div>
+        </div>
+        <div class="rek-stat-card green">
+          <div class="rsk-label">Total Sudah Dibayar</div>
+          <div class="rsk-value" id="hp-stat-bayar">Rp. 0</div>
+        </div>
+      </div>
+
+      <!-- Cicilan reminder -->
+      <div id="cicilan-reminder" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#856404;">
+        <strong>🔔 Cicilan Jatuh Tempo:</strong> <span id="cicilan-reminder-text"></span>
+      </div>
+
       <div class="hp-tabs">
         <button class="hp-tab active" onclick="switchHPTab('semua',this)">Semua</button>
         <button class="hp-tab" onclick="switchHPTab('hutang',this)">Hutang</button>
         <button class="hp-tab" onclick="switchHPTab('piutang',this)">Piutang</button>
+        <button class="hp-tab" onclick="switchHPTab('cicilan',this)">🔄 Cicilan Rutin</button>
+        <button class="hp-tab" onclick="switchHPTab('lunas',this)">✅ Lunas</button>
       </div>
+
       <div class="card-box">
         <div class="card-box-header">
-          <h3>Daftar Hutang & Piutang</h3>
+          <h3 id="hp-table-title">Daftar Hutang & Piutang</h3>
           <input type="text" placeholder="🔍 Cari..." style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:12px;" oninput="filterTable(this,'tbl-hutang')">
         </div>
         <div class="table-wrap">
           <table id="tbl-hutang">
-            <thead><tr>
-              <th>No</th><th>Tgl</th><th>Nama Kontak</th><th>No. Invoice</th>
-              <th>Keterangan</th><th>Jenis</th><th>Nominal</th><th>Bunga</th>
-              <th>Jatuh Tempo</th><th>Status</th><th>Cicilan</th><th>Sisa</th><th>Umur</th><th>Aksi</th>
-            </tr></thead>
+            <thead><tr id="hp-thead-row"></tr></thead>
             <tbody id="tbody-hutang"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Detail cicilan panel -->
+      <div id="hp-detail-panel" style="display:none;margin-top:14px;">
+        <div class="card-box">
+          <div class="card-box-header">
+            <h3 id="hp-detail-title">Detail Cicilan</h3>
+            <button onclick="document.getElementById('hp-detail-panel').style.display='none'" style="background:#eee;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕ Tutup</button>
+          </div>
+          <div id="hp-detail-body" style="padding:16px;"></div>
         </div>
       </div>
     </div>
@@ -1938,16 +1970,24 @@ table tbody tr:hover { background: #fafafa; }
 
 <!-- Modal Hutang Piutang -->
 <div class="modal-overlay" id="modalHutang">
-  <div class="modal" style="width:580px">
+  <div class="modal" style="width:600px">
     <div class="modal-header" style="background:var(--red)">
       <h3>Tambah Hutang / Piutang</h3>
       <button class="modal-close" onclick="closeModal('modalHutang')">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="hp-edit-id">
+
+      <!-- Tipe: Biasa atau Cicilan Rutin -->
+      <div style="display:flex;background:#f0f2f5;border-radius:6px;padding:3px;margin-bottom:14px;">
+        <button id="hp-type-biasa-btn" onclick="switchHPType('biasa')" style="flex:1;padding:7px;border:none;border-radius:4px;background:var(--red);color:#fff;font-family:var(--font-main);font-size:12px;font-weight:700;cursor:pointer;">📄 Hutang Biasa</button>
+        <button id="hp-type-cicilan-btn" onclick="switchHPType('cicilan')" style="flex:1;padding:7px;border:none;border-radius:4px;background:transparent;color:#888;font-family:var(--font-main);font-size:12px;cursor:pointer;">🔄 Cicilan Rutin (Kredit)</button>
+      </div>
+      <input type="hidden" id="hp-type" value="biasa">
+
       <div class="form-row">
         <div class="form-group">
-          <label>Tanggal *</label>
+          <label>Tanggal Mulai *</label>
           <input type="date" id="hp-tgl">
         </div>
         <div class="form-group">
@@ -1961,54 +2001,139 @@ table tbody tr:hover { background: #fafafa; }
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Nama Kontak *</label>
-          <input type="text" id="hp-kontak" placeholder="Nama vendor / pelanggan...">
+          <label>Nama Kontak / Kreditur *</label>
+          <input type="text" id="hp-kontak" placeholder="Misal: Leasing FIF, Bank BCA...">
         </div>
         <div class="form-group">
-          <label>No. Invoice</label>
+          <label>No. Invoice / Kontrak</label>
           <input type="text" id="hp-invoice" placeholder="INV-001">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Keterangan</label>
-          <input type="text" id="hp-ket" placeholder="Alasan hutang/piutang...">
+          <label>Keterangan *</label>
+          <input type="text" id="hp-ket" placeholder="Misal: Kredit Motor Honda Beat...">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Nominal (Rp) *</label>
-          <input type="text" id="hp-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+          <label>Total Nominal (Rp) *</label>
+          <input type="text" id="hp-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this);hitungCicilan()">
         </div>
         <div class="form-group">
-          <label>Bunga (%)</label>
-          <input type="number" id="hp-bunga" placeholder="0" min="0" step="0.1">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Tanggal Jatuh Tempo</label>
-          <input type="date" id="hp-jatuh">
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select id="hp-status">
-            <option value="Belum Bayar">Belum Bayar</option>
-            <option value="Cicil">Cicil</option>
-            <option value="Lunas">Lunas</option>
-          </select>
+          <label>Bunga / Tahun (%)</label>
+          <input type="number" id="hp-bunga" placeholder="0" min="0" step="0.1" oninput="hitungCicilan()">
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Cicilan Dibayar (Rp)</label>
-          <input type="text" id="hp-cicilan" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+
+      <!-- Cicilan Rutin fields -->
+      <div id="hp-cicilan-fields" style="display:none;background:#fff8f8;border:1px solid #ffd0d0;border-radius:8px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:10px;">⚙️ Pengaturan Cicilan Rutin</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tenor (Bulan) *</label>
+            <input type="number" id="hp-tenor" placeholder="36" min="1" max="360" oninput="hitungCicilan()">
+          </div>
+          <div class="form-group">
+            <label>Tanggal Bayar Tiap Bulan</label>
+            <select id="hp-tgl-cicilan">
+              <option value="1">Tanggal 1</option>
+              <option value="5">Tanggal 5</option>
+              <option value="10">Tanggal 10</option>
+              <option value="15">Tanggal 15</option>
+              <option value="20" selected>Tanggal 20</option>
+              <option value="25">Tanggal 25</option>
+              <option value="28">Tanggal 28</option>
+              <option value="31">Akhir Bulan</option>
+            </select>
+          </div>
+        </div>
+        <!-- Auto-calculated cicilan per bulan -->
+        <div id="hp-cicilan-preview" style="background:#fff;border-radius:6px;padding:10px;font-size:13px;display:none;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="color:#888;">Cicilan per Bulan:</span>
+            <strong id="hp-cicilan-per-bulan" style="color:var(--red)">Rp. 0 ,-</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="color:#888;">Total dengan Bunga:</span>
+            <strong id="hp-total-dengan-bunga" style="color:var(--red)">Rp. 0 ,-</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:#888;">Jatuh Tempo Terakhir:</span>
+            <strong id="hp-jatuh-preview" style="color:#555">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hutang Biasa fields -->
+      <div id="hp-biasa-fields">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tanggal Jatuh Tempo</label>
+            <input type="date" id="hp-jatuh">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="hp-status">
+              <option value="Belum Bayar">Belum Bayar</option>
+              <option value="Cicil">Cicil</option>
+              <option value="Lunas">Lunas</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Sudah Dibayar (Rp)</label>
+            <input type="text" id="hp-cicilan" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+          </div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modalHutang')" style="background:#eee;color:#555;">Batal</button>
       <button class="btn btn-danger" onclick="saveHutang()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Bayar Cicilan -->
+<div class="modal-overlay" id="modalBayarCicilan">
+  <div class="modal" style="width:480px">
+    <div class="modal-header" style="background:var(--green)">
+      <h3>💳 Bayar Cicilan</h3>
+      <button class="modal-close" onclick="closeModal('modalBayarCicilan')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="bc-hutang-id">
+      <div id="bc-info" style="background:#f0fff4;border-radius:6px;padding:12px;margin-bottom:14px;font-size:13px;"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jumlah Bayar (Rp) *</label>
+          <input type="text" id="bc-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+        </div>
+        <div class="form-group">
+          <label>Tanggal Bayar</label>
+          <input type="date" id="bc-tgl">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bayar dari Rekening</label>
+          <select id="bc-rekening">
+            <option value="">-- Bayar Manual (tidak dari rekening) --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Keterangan</label>
+          <input type="text" id="bc-ket" placeholder="Misal: Cicilan ke-3 bulan Maret...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalBayarCicilan')" style="background:#eee;color:#555;">Batal</button>
+      <button class="btn btn-success" onclick="prosessBayarCicilan()">✅ Proses Pembayaran</button>
     </div>
   </div>
 </div>
@@ -2464,9 +2589,9 @@ const DEFAULT_DATA = {
     {id:6, tgl:'2025-03-17', jam:'16:00:00', kat:'Listrik', ket:'Tagihan PLN', jenis:'Pengeluaran', nominal:200000, struk:null},
   ],
   hutang: [
-    {id:1, tgl:'2025-03-01', kontak:'Budi Santoso', invoice:'INV-001', ket:'Pembelian bahan baku', jenis:'Hutang', nominal:2000000, bunga:0, jatuh:'2025-04-01', status:'Belum Bayar', cicilan:0},
-    {id:2, tgl:'2025-02-15', kontak:'PT Maju Jaya', invoice:'INV-002', ket:'Pinjaman modal', jenis:'Piutang', nominal:5000000, bunga:2, jatuh:'2025-04-15', status:'Cicil', cicilan:1000000},
-    {id:3, tgl:'2025-01-10', kontak:'Siti Rahma', invoice:'INV-003', ket:'Pinjaman teman', jenis:'Piutang', nominal:500000, bunga:0, jatuh:'2025-02-10', status:'Lunas', cicilan:500000},
+    {id:1, tgl:'2025-03-01', kontak:'Budi Santoso', invoice:'INV-001', ket:'Pembelian bahan baku', jenis:'Hutang', nominal:2000000, nominalTotal:2000000, bunga:0, jatuh:'2025-04-01', status:'Belum Bayar', cicilan:0, totalDibayar:0, tipeHutang:'biasa', riwayatCicilan:[]},
+    {id:2, tgl:'2025-02-15', kontak:'PT Maju Jaya', invoice:'INV-002', ket:'Pinjaman modal', jenis:'Piutang', nominal:5000000, nominalTotal:5000000, bunga:2, jatuh:'2025-04-15', status:'Cicil', cicilan:1000000, totalDibayar:1000000, tipeHutang:'biasa', riwayatCicilan:[]},
+    {id:3, tgl:'2025-01-10', kontak:'Leasing FIF', invoice:'FIF-2025-001', ket:'Kredit Motor Honda Beat', jenis:'Hutang', nominal:15000000, nominalTotal:18000000, bunga:10, jatuh:'2027-01-20', status:'Cicil', cicilan:3000000, totalDibayar:3000000, tipeHutang:'cicilan', tenor:36, tglCicilan:20, cicilanPerBulan:500000, riwayatCicilan:[{ke:1,tgl:'2025-02-20',nominal:500000,ket:'Cicilan ke-1'},{ke:2,tgl:'2025-03-20',nominal:500000,ket:'Cicilan ke-2'},{ke:3,tgl:'2025-04-20',nominal:500000,ket:'Cicilan ke-3'},{ke:4,tgl:'2025-05-20',nominal:500000,ket:'Cicilan ke-4'},{ke:5,tgl:'2025-06-20',nominal:500000,ket:'Cicilan ke-5'},{ke:6,tgl:'2025-07-20',nominal:500000,ket:'Cicilan ke-6'}]},
   ],
   rekening: [
     {id:1, nama:'Tabungan Utama', nomor:'1234-5678-9012', bank:'BCA', saldo:15000000, adminBulanan:15000, tglAdmin:31, lastAdminMonth:'', biayaTransfer:0},
@@ -2935,21 +3060,30 @@ function updateDashboard() {
 
 function checkHutangReminder() {
   const now = new Date();
-  const soon = new Date(now.getTime() + 7*24*60*60*1000); // 7 days
-  
-  const overdue = store.hutang.filter(h => h.status !== 'Lunas' && new Date(h.jatuh) < now);
-  const nearDue = store.hutang.filter(h => h.status !== 'Lunas' && new Date(h.jatuh) >= now && new Date(h.jatuh) <= soon);
-  
+  const soon7 = new Date(now.getTime() + 7*24*60*60*1000);
+  const soon3 = new Date(now.getTime() + 3*24*60*60*1000);
+
+  const overdue = store.hutang.filter(h => h.status!=='Lunas' && h.jatuh && new Date(h.jatuh) < now);
+  const nearDue = store.hutang.filter(h => h.status!=='Lunas' && h.jatuh && new Date(h.jatuh)>=now && new Date(h.jatuh)<=soon7);
+
+  // Check cicilan rutin H-3
+  const cicilanNear = store.hutang.filter(h => {
+    if (h.status==='Lunas' || h.tipeHutang!=='cicilan') return false;
+    const next = getNextCicilanDate(h);
+    return next && new Date(next) <= soon3;
+  });
+
   const rem = document.getElementById('hutang-reminder');
   const remText = document.getElementById('hutang-reminder-text');
   const badge = document.getElementById('hp-badge');
-  
+
   let msgs = [];
   if (overdue.length > 0) msgs.push(`${overdue.length} sudah lewat jatuh tempo!`);
   if (nearDue.length > 0) msgs.push(`${nearDue.length} jatuh tempo dalam 7 hari`);
-  
+  if (cicilanNear.length > 0) msgs.push(`${cicilanNear.length} cicilan jatuh tempo dalam 3 hari!`);
+
   if (badge) badge.style.display = msgs.length > 0 ? 'inline' : 'none';
-  
+
   if (rem && msgs.length > 0) {
     rem.style.display = 'block';
     if (remText) remText.textContent = msgs.join(' • ');
@@ -3554,6 +3688,55 @@ function viewStruk(id) {
 // ===========================
 let hpFilter = 'semua';
 
+// ===========================
+// HUTANG PIUTANG - ENHANCED
+// ===========================
+
+function switchHPType(type) {
+  document.getElementById('hp-type').value = type;
+  const isCicilan = type === 'cicilan';
+  document.getElementById('hp-cicilan-fields').style.display = isCicilan ? 'block' : 'none';
+  document.getElementById('hp-biasa-fields').style.display = isCicilan ? 'none' : 'block';
+  const bb = document.getElementById('hp-type-biasa-btn');
+  const cb = document.getElementById('hp-type-cicilan-btn');
+  if (bb) { bb.style.background = isCicilan?'transparent':'var(--red)'; bb.style.color = isCicilan?'#888':'#fff'; }
+  if (cb) { cb.style.background = isCicilan?'var(--red)':'transparent'; cb.style.color = isCicilan?'#fff':'#888'; }
+  if (isCicilan) hitungCicilan();
+}
+
+function hitungCicilan() {
+  const nominal = getRawNum('hp-nominal');
+  const bunga = parseFloat(document.getElementById('hp-bunga')?.value)||0;
+  const tenor = parseInt(document.getElementById('hp-tenor')?.value)||0;
+  const tgl = document.getElementById('hp-tgl')?.value;
+  const tglCicilan = parseInt(document.getElementById('hp-tgl-cicilan')?.value)||20;
+
+  if (!nominal || !tenor) {
+    document.getElementById('hp-cicilan-preview').style.display = 'none';
+    return;
+  }
+
+  // Hitung total dengan bunga flat
+  const totalBunga = nominal * (bunga/100) * (tenor/12);
+  const totalDenganBunga = nominal + totalBunga;
+  const cicilanPerBulan = Math.ceil(totalDenganBunga / tenor);
+
+  // Hitung tanggal jatuh tempo terakhir
+  let jatuhTempo = '-';
+  if (tgl) {
+    const startDate = new Date(tgl);
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + tenor);
+    endDate.setDate(tglCicilan === 31 ? new Date(endDate.getFullYear(), endDate.getMonth()+1, 0).getDate() : tglCicilan);
+    jatuhTempo = fmtDate(endDate.toISOString().split('T')[0]);
+  }
+
+  document.getElementById('hp-cicilan-per-bulan').textContent = fmtRp(cicilanPerBulan);
+  document.getElementById('hp-total-dengan-bunga').textContent = fmtRp(totalDenganBunga);
+  document.getElementById('hp-jatuh-preview').textContent = jatuhTempo;
+  document.getElementById('hp-cicilan-preview').style.display = 'block';
+}
+
 function switchHPTab(tab, btn) {
   hpFilter = tab;
   document.querySelectorAll('.hp-tab').forEach(b=>b.classList.remove('active'));
@@ -3563,43 +3746,146 @@ function switchHPTab(tab, btn) {
 
 function renderHutang() {
   const tbody = document.getElementById('tbody-hutang');
+  const thead = document.getElementById('hp-thead-row');
   let data = [...store.hutang];
-  if (hpFilter !== 'semua') data = data.filter(h=>h.jenis.toLowerCase()===hpFilter);
-  
-  tbody.innerHTML = '';
   const now = new Date();
-  
+
+  // Filter
+  if (hpFilter === 'hutang') data = data.filter(h=>h.jenis==='Hutang' && h.status!=='Lunas');
+  else if (hpFilter === 'piutang') data = data.filter(h=>h.jenis==='Piutang' && h.status!=='Lunas');
+  else if (hpFilter === 'cicilan') data = data.filter(h=>h.tipeHutang==='cicilan' && h.status!=='Lunas');
+  else if (hpFilter === 'lunas') data = data.filter(h=>h.status==='Lunas');
+  else data = data.filter(h=>h.status!=='Lunas'); // semua aktif
+
+  // Update stats
+  const allAktif = store.hutang.filter(h=>h.status!=='Lunas');
+  const totalHutang = allAktif.filter(h=>h.jenis==='Hutang').reduce((s,h)=>s+(h.nominal-(h.totalDibayar||h.cicilan||0)),0);
+  const totalPiutang = allAktif.filter(h=>h.jenis==='Piutang').reduce((s,h)=>s+(h.nominal-(h.totalDibayar||h.cicilan||0)),0);
+  const totalBayar = store.hutang.reduce((s,h)=>s+(h.totalDibayar||h.cicilan||0),0);
+  const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=fmtRpShort(v); };
+  setEl('hp-stat-hutang', totalHutang);
+  setEl('hp-stat-piutang', totalPiutang);
+  setEl('hp-stat-bayar', totalBayar);
+
+  // Update table title
+  const titles = {semua:'Hutang & Piutang Aktif',hutang:'Daftar Hutang Aktif',piutang:'Daftar Piutang Aktif',cicilan:'Cicilan Rutin Aktif',lunas:'Data Lunas'};
+  const titleEl = document.getElementById('hp-table-title');
+  if (titleEl) titleEl.textContent = titles[hpFilter]||'Daftar';
+
+  // Check cicilan reminder
+  checkCicilanReminder();
+
+  // Render thead
+  if (thead) {
+    const isCicilan = hpFilter === 'cicilan';
+    if (isCicilan) {
+      thead.innerHTML = '<th>No</th><th>Kreditur</th><th>Keterangan</th><th>Total</th><th>Cicilan/Bln</th><th>Tgl Bayar</th><th>Progress</th><th>Sudah Bayar</th><th>Sisa</th><th>Cicilan Ke</th><th>Status</th><th>Aksi</th>';
+    } else {
+      thead.innerHTML = '<th>No</th><th>Tgl</th><th>Nama Kontak</th><th>Keterangan</th><th>Jenis</th><th>Total</th><th>Sudah Dibayar</th><th>Sisa</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th>';
+    }
+  }
+
+  tbody.innerHTML = '';
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:#aaa;padding:20px;">Tidak ada data</td></tr>';
+    return;
+  }
+
   data.forEach((h,i) => {
-    const sisa = h.nominal - h.cicilan;
-    const jatuh = new Date(h.jatuh);
-    const umur = Math.floor((now - new Date(h.tgl))/(1000*60*60*24));
-    const isOverdue = jatuh < now && h.status !== 'Lunas';
-    const isNearing = !isOverdue && (jatuh - now) < 7*24*60*60*1000 && h.status !== 'Lunas';
-    
-    let stBadge = h.status==='Lunas'?'badge-success':h.status==='Cicil'?'badge-warning':'badge-danger';
-    let rowStyle = isOverdue ? 'background:#fff5f5' : isNearing ? 'background:#fffde7' : '';
-    
-    tbody.innerHTML += `
-    <tr style="${rowStyle}">
-      <td>${i+1}</td>
-      <td>${fmtDate(h.tgl)}</td>
-      <td><strong>${h.kontak}</strong></td>
-      <td>${h.invoice}</td>
-      <td>${h.ket}</td>
-      <td><span class="badge ${h.jenis==='Hutang'?'badge-danger':'badge-info'}">${h.jenis}</span></td>
-      <td style="font-weight:700">${fmtRp(h.nominal)}</td>
-      <td>${h.bunga}%</td>
-      <td style="color:${isOverdue?'var(--red)':isNearing?'var(--orange)':'inherit'}">${fmtDate(h.jatuh)}</td>
-      <td><span class="badge ${stBadge}">${h.status}</span></td>
-      <td>${fmtRp(h.cicilan)}</td>
-      <td style="color:${sisa>0?'var(--red)':'var(--green)'};font-weight:700">${fmtRp(sisa)}</td>
-      <td>${umur} hari</td>
-      <td>
-        <button class="btn btn-sm btn-primary" onclick="editHutang(${h.id})">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteHutang(${h.id})">🗑️</button>
-      </td>
-    </tr>`;
+    const totalDibayar = h.totalDibayar || h.cicilan || 0;
+    const sisa = Math.max(0, (h.nominalTotal||h.nominal) - totalDibayar);
+    const isCicilanType = h.tipeHutang === 'cicilan';
+
+    if (isCicilanType && hpFilter === 'cicilan') {
+      // Cicilan view
+      const tenor = h.tenor || 1;
+      const cicilanPerBulan = h.cicilanPerBulan || Math.ceil((h.nominalTotal||h.nominal)/tenor);
+      const kaliSudahBayar = h.riwayatCicilan ? h.riwayatCicilan.length : Math.floor(totalDibayar/cicilanPerBulan);
+      const pct = Math.min(100, Math.round(totalDibayar/(h.nominalTotal||h.nominal)*100));
+      const stBadge = h.status==='Lunas'?'badge-success':h.status==='Cicil'?'badge-warning':'badge-danger';
+      const tglNext = getNextCicilanDate(h);
+      const isNear = tglNext && (new Date(tglNext)-now) < 3*24*60*60*1000 && h.status!=='Lunas';
+
+      tbody.innerHTML += `
+      <tr style="${isNear?'background:#fffde7':''}">
+        <td>${i+1}</td>
+        <td><strong>${h.kontak}</strong></td>
+        <td>${h.ket}</td>
+        <td style="font-weight:700">${fmtRp(h.nominalTotal||h.nominal)}</td>
+        <td style="color:var(--red);font-weight:700">${fmtRp(cicilanPerBulan)}</td>
+        <td style="color:${isNear?'var(--red)':'inherit'};font-weight:${isNear?'700':'400'}">${h.tglCicilan==31?'Akhir Bulan':'Tgl '+h.tglCicilan}${isNear?'<br><small style="color:var(--red)">⚠️ Segera!</small>':''}</td>
+        <td>
+          <div style="background:#eee;border-radius:10px;height:8px;width:100px;overflow:hidden;">
+            <div style="background:${pct>=100?'var(--green)':pct>=50?'var(--blue)':'var(--red)'};height:100%;width:${pct}%;border-radius:10px;transition:width .5s;"></div>
+          </div>
+          <small style="color:#888">${pct}%</small>
+        </td>
+        <td style="color:var(--green);font-weight:700">${fmtRp(totalDibayar)}</td>
+        <td style="color:${sisa>0?'var(--red)':'var(--green)'};font-weight:700">${fmtRp(sisa)}</td>
+        <td><strong>${kaliSudahBayar}</strong>/${tenor} kali</td>
+        <td><span class="badge ${stBadge}">${h.status}</span></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-sm btn-success" onclick="bukaBayarCicilan(${h.id})" ${h.status==='Lunas'?'disabled':''}>💳 Bayar</button>
+          <button class="btn btn-sm btn-info" onclick="lihatDetailCicilan(${h.id})" style="background:var(--blue);color:#fff">📋</button>
+          <button class="btn btn-sm btn-primary" onclick="editHutang(${h.id})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteHutang(${h.id})">🗑️</button>
+        </td>
+      </tr>`;
+    } else {
+      // Normal hutang view
+      const jatuh = h.jatuh ? new Date(h.jatuh) : null;
+      const isOverdue = jatuh && jatuh < now && h.status !== 'Lunas';
+      const isNearing = jatuh && !isOverdue && (jatuh-now) < 7*24*60*60*1000 && h.status !== 'Lunas';
+      const stBadge = h.status==='Lunas'?'badge-success':h.status==='Cicil'?'badge-warning':'badge-danger';
+      const rowStyle = isOverdue?'background:#fff5f5':isNearing?'background:#fffde7':'';
+
+      tbody.innerHTML += `
+      <tr style="${rowStyle}">
+        <td>${i+1}</td>
+        <td style="font-size:11px">${fmtDate(h.tgl)}</td>
+        <td><strong>${h.kontak}</strong></td>
+        <td>${h.ket}${isCicilanType?'<br><small style="color:var(--blue)">🔄 Cicilan</small>':''}</td>
+        <td><span class="badge ${h.jenis==='Hutang'?'badge-danger':'badge-info'}">${h.jenis}</span></td>
+        <td style="font-weight:700">${fmtRp(h.nominalTotal||h.nominal)}</td>
+        <td style="color:var(--green)">${fmtRp(totalDibayar)}</td>
+        <td style="color:${sisa>0?'var(--red)':'var(--green)'};font-weight:700">${fmtRp(sisa)}</td>
+        <td style="color:${isOverdue?'var(--red)':isNearing?'var(--orange)':'inherit'}">${h.jatuh?fmtDate(h.jatuh):'-'}</td>
+        <td><span class="badge ${stBadge}">${h.status}</span></td>
+        <td style="white-space:nowrap">
+          ${isCicilanType?`<button class="btn btn-sm btn-success" onclick="bukaBayarCicilan(${h.id})">💳 Bayar</button>`:''}
+          <button class="btn btn-sm btn-primary" onclick="editHutang(${h.id})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteHutang(${h.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }
   });
+}
+
+function getNextCicilanDate(h) {
+  if (!h.tgl || !h.tglCicilan) return null;
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth(), h.tglCicilan===31 ? new Date(now.getFullYear(),now.getMonth()+1,0).getDate() : h.tglCicilan);
+  if (d < now) d.setMonth(d.getMonth()+1);
+  return d.toISOString().split('T')[0];
+}
+
+function checkCicilanReminder() {
+  const now = new Date();
+  const soon = new Date(now.getTime() + 3*24*60*60*1000);
+  const dueSoon = store.hutang.filter(h => {
+    if (h.status==='Lunas' || h.tipeHutang!=='cicilan') return false;
+    const next = getNextCicilanDate(h);
+    if (!next) return false;
+    return new Date(next) <= soon;
+  });
+  const rem = document.getElementById('cicilan-reminder');
+  const remText = document.getElementById('cicilan-reminder-text');
+  if (rem && dueSoon.length > 0) {
+    rem.style.display = 'block';
+    remText.textContent = dueSoon.map(h => `${h.ket} (${h.kontak}) — ${fmtRp(h.cicilanPerBulan)}/bln`).join(' • ');
+  } else if (rem) {
+    rem.style.display = 'none';
+  }
 }
 
 function saveHutang() {
@@ -3610,21 +3896,49 @@ function saveHutang() {
   const ket = document.getElementById('hp-ket').value.trim();
   const nominal = getRawNum('hp-nominal');
   const bunga = parseFloat(document.getElementById('hp-bunga').value)||0;
-  const jatuh = document.getElementById('hp-jatuh').value;
-  const status = document.getElementById('hp-status').value;
-  const cicilan = getRawNum('hp-cicilan');
+  const tipeHutang = document.getElementById('hp-type').value;
   const editId = document.getElementById('hp-edit-id').value;
-  
+
   if (!tgl||!jenis||!kontak||!nominal) return showToast('Data wajib diisi!','red');
-  
-  const obj = {tgl,jenis,kontak,invoice,ket,nominal,bunga,jatuh,status,cicilan};
+
+  let obj = { tgl, jenis, kontak, invoice, ket, nominal, bunga, tipeHutang };
+
+  if (tipeHutang === 'cicilan') {
+    const tenor = parseInt(document.getElementById('hp-tenor').value)||0;
+    const tglCicilan = parseInt(document.getElementById('hp-tgl-cicilan').value)||20;
+    if (!tenor) return showToast('Tenor wajib diisi untuk cicilan!','red');
+
+    const totalBunga = nominal * (bunga/100) * (tenor/12);
+    const nominalTotal = nominal + totalBunga;
+    const cicilanPerBulan = Math.ceil(nominalTotal/tenor);
+
+    // Hitung jatuh tempo terakhir
+    const endDate = new Date(tgl);
+    endDate.setMonth(endDate.getMonth() + tenor);
+    const lastDay = new Date(endDate.getFullYear(), endDate.getMonth()+1, 0).getDate();
+    endDate.setDate(tglCicilan===31 ? lastDay : Math.min(tglCicilan, lastDay));
+
+    obj = { ...obj, tenor, tglCicilan, nominalTotal, cicilanPerBulan,
+            jatuh: endDate.toISOString().split('T')[0],
+            status: 'Cicil', cicilan: 0, totalDibayar: 0,
+            riwayatCicilan: [] };
+  } else {
+    obj = { ...obj,
+      jatuh: document.getElementById('hp-jatuh').value,
+      status: document.getElementById('hp-status').value,
+      cicilan: getRawNum('hp-cicilan'),
+      totalDibayar: getRawNum('hp-cicilan'),
+      nominalTotal: nominal,
+    };
+  }
+
   if (editId) {
     const idx = store.hutang.findIndex(h=>h.id==editId);
-    store.hutang[idx] = {id:store.hutang[idx].id,...obj};
+    store.hutang[idx] = { id: store.hutang[idx].id, riwayatCicilan: store.hutang[idx].riwayatCicilan||[], ...obj };
   } else {
-    store.hutang.push({id:store.nextId.hp++,...obj});
+    store.hutang.push({ id: store.nextId.hp++, ...obj });
   }
-  
+
   saveStore();
   closeModal('modalHutang');
   renderHutang();
@@ -3637,13 +3951,22 @@ function editHutang(id) {
   document.getElementById('hp-tgl').value = h.tgl;
   document.getElementById('hp-jenis').value = h.jenis;
   document.getElementById('hp-kontak').value = h.kontak;
-  document.getElementById('hp-invoice').value = h.invoice;
+  document.getElementById('hp-invoice').value = h.invoice||'';
   document.getElementById('hp-ket').value = h.ket;
   setFmtInput('hp-nominal', h.nominal);
-  document.getElementById('hp-bunga').value = h.bunga;
-  document.getElementById('hp-jatuh').value = h.jatuh;
-  document.getElementById('hp-status').value = h.status;
-  setFmtInput('hp-cicilan', h.cicilan);
+  document.getElementById('hp-bunga').value = h.bunga||0;
+
+  if (h.tipeHutang === 'cicilan') {
+    switchHPType('cicilan');
+    document.getElementById('hp-tenor').value = h.tenor||'';
+    document.getElementById('hp-tgl-cicilan').value = h.tglCicilan||20;
+    hitungCicilan();
+  } else {
+    switchHPType('biasa');
+    document.getElementById('hp-jatuh').value = h.jatuh||'';
+    document.getElementById('hp-status').value = h.status;
+    setFmtInput('hp-cicilan', h.totalDibayar||h.cicilan||0);
+  }
   openModal('modalHutang','Edit Hutang/Piutang');
 }
 
@@ -3653,6 +3976,180 @@ function deleteHutang(id) {
   saveStore();
   renderHutang();
   showToast('Data dihapus!','red');
+}
+
+// Bayar cicilan
+function bukaBayarCicilan(id) {
+  const h = store.hutang.find(h=>h.id===id);
+  if (!h) return;
+
+  document.getElementById('bc-hutang-id').value = id;
+  document.getElementById('bc-tgl').value = today();
+  const cicilanPerBulan = h.cicilanPerBulan || 0;
+  setFmtInput('bc-nominal', cicilanPerBulan);
+
+  // Info box
+  const totalDibayar = h.totalDibayar||0;
+  const sisa = Math.max(0,(h.nominalTotal||h.nominal)-totalDibayar);
+  const kali = h.riwayatCicilan ? h.riwayatCicilan.length : 0;
+  document.getElementById('bc-info').innerHTML = `
+    <strong>${h.ket}</strong> — ${h.kontak}<br>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;">
+      <div style="text-align:center"><div style="font-size:11px;color:#888">Total</div><strong>${fmtRp(h.nominalTotal||h.nominal)}</strong></div>
+      <div style="text-align:center"><div style="font-size:11px;color:#888">Sudah Bayar</div><strong style="color:var(--green)">${fmtRp(totalDibayar)}</strong></div>
+      <div style="text-align:center"><div style="font-size:11px;color:#888">Sisa</div><strong style="color:var(--red)">${fmtRp(sisa)}</strong></div>
+    </div>
+    ${h.tenor?`<div style="margin-top:6px;font-size:12px;color:#888;">Cicilan ke-${kali+1} dari ${h.tenor} • Cicilan/bln: ${fmtRp(cicilanPerBulan)}</div>`:''}
+  `;
+
+  // Populate rekening
+  const sel = document.getElementById('bc-rekening');
+  sel.innerHTML = '<option value="">-- Bayar Manual --</option>';
+  store.rekening.forEach(r => {
+    sel.innerHTML += `<option value="${r.id}">${r.nama} (${r.bank}) — ${fmtRpShort(r.saldo)}</option>`;
+  });
+
+  document.getElementById('bc-ket').value = h.tipeHutang==='cicilan' ? `Cicilan ke-${kali+1} — ${h.ket}` : `Pembayaran ${h.ket}`;
+  openModal('modalBayarCicilan','💳 Bayar Cicilan');
+}
+
+function prosessBayarCicilan() {
+  const id = document.getElementById('bc-hutang-id').value;
+  const nominal = getRawNum('bc-nominal');
+  const tgl = document.getElementById('bc-tgl').value || today();
+  const rekId = document.getElementById('bc-rekening').value;
+  const ket = document.getElementById('bc-ket').value.trim();
+
+  if (!nominal) return showToast('Nominal wajib diisi!','red');
+
+  const h = store.hutang.find(h=>h.id==id);
+  if (!h) return;
+
+  // Validate rekening saldo
+  if (rekId) {
+    const rek = store.rekening.find(r=>r.id==rekId);
+    if (rek && rek.saldo < nominal) {
+      return showToast(`Saldo ${rek.nama} tidak cukup! Saldo: ${fmtRpShort(rek.saldo)}`, 'red');
+    }
+  }
+
+  // Update hutang
+  h.totalDibayar = (h.totalDibayar||0) + nominal;
+  h.cicilan = h.totalDibayar;
+  if (!h.riwayatCicilan) h.riwayatCicilan = [];
+  const kali = h.riwayatCicilan.length + 1;
+  h.riwayatCicilan.push({ ke: kali, tgl, nominal, ket, rekId });
+
+  // Update status
+  const sisa = Math.max(0,(h.nominalTotal||h.nominal) - h.totalDibayar);
+  if (sisa <= 0) {
+    h.status = 'Lunas';
+    showToast(`🎉 LUNAS! ${h.ket} sudah terlunasi!`);
+  } else {
+    h.status = 'Cicil';
+  }
+
+  // Catat ke Data Transaksi
+  store.transaksi.push({
+    id: store.nextId.tr++, tgl,
+    jam: new Date().toTimeString().slice(0,8),
+    kat: 'Cicilan', ket: ket || `Bayar cicilan ${h.ket}`,
+    jenis: 'Pengeluaran', nominal,
+    struk: null, rekeningId: rekId||null,
+  });
+
+  // Potong saldo rekening
+  if (rekId) {
+    const rek = store.rekening.find(r=>r.id==rekId);
+    if (rek) {
+      rek.saldo -= nominal;
+      if (!store.mutasi) store.mutasi = [];
+      store.mutasi.push({
+        id: Date.now(), tgl, rekId: rek.id, rekNama: rek.nama,
+        ket: ket||`Bayar cicilan ${h.ket}`, jenis:'Debit',
+        nominal, saldoSesudah: rek.saldo,
+      });
+    }
+  }
+
+  saveStore();
+  closeModal('modalBayarCicilan');
+  renderHutang();
+  renderTransaksi();
+  if (document.getElementById('page-rekening').classList.contains('active')) renderRekening();
+  showToast(sisa > 0 ? `✅ Cicilan ke-${kali} berhasil! Sisa: ${fmtRp(sisa)}` : '🎉 Lunas!');
+}
+
+function lihatDetailCicilan(id) {
+  const h = store.hutang.find(h=>h.id===id);
+  if (!h) return;
+
+  const panel = document.getElementById('hp-detail-panel');
+  const title = document.getElementById('hp-detail-title');
+  const body = document.getElementById('hp-detail-body');
+  if (!panel) return;
+
+  panel.style.display = 'block';
+  title.textContent = `Detail Cicilan: ${h.ket}`;
+
+  const totalDibayar = h.totalDibayar||0;
+  const sisa = Math.max(0,(h.nominalTotal||h.nominal)-totalDibayar);
+  const pct = Math.min(100,Math.round(totalDibayar/(h.nominalTotal||h.nominal)*100));
+  const riwayat = h.riwayatCicilan||[];
+
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;">
+      <div style="background:#f8f9fa;border-radius:6px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">Total Pinjaman</div>
+        <strong style="color:var(--dark-text)">${fmtRp(h.nominalTotal||h.nominal)}</strong>
+      </div>
+      <div style="background:#e8f5e9;border-radius:6px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">Sudah Dibayar</div>
+        <strong style="color:var(--green)">${fmtRp(totalDibayar)}</strong>
+      </div>
+      <div style="background:#ffebee;border-radius:6px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">Sisa</div>
+        <strong style="color:var(--red)">${fmtRp(sisa)}</strong>
+      </div>
+      <div style="background:#e3f2fd;border-radius:6px;padding:12px;text-align:center;">
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">Cicilan/Bulan</div>
+        <strong style="color:var(--blue)">${fmtRp(h.cicilanPerBulan||0)}</strong>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+        <span>Progress Pelunasan</span>
+        <strong>${pct}% (${riwayat.length}/${h.tenor||'?'} kali)</strong>
+      </div>
+      <div style="background:#eee;border-radius:10px;height:12px;overflow:hidden;">
+        <div style="background:${pct>=100?'var(--green)':pct>=50?'var(--blue)':'var(--red)'};height:100%;width:${pct}%;border-radius:10px;transition:width 1s;"></div>
+      </div>
+    </div>
+
+    <h4 style="font-size:13px;margin-bottom:10px;color:var(--dark-text);">📋 Riwayat Pembayaran</h4>
+    ${riwayat.length === 0 ? '<div style="color:#aaa;text-align:center;padding:10px;">Belum ada pembayaran</div>' : `
+    <table style="width:100%;font-size:12px;border-collapse:collapse;">
+      <thead><tr style="background:#f8f9fa;">
+        <th style="padding:8px;text-align:left;">Ke-</th>
+        <th style="padding:8px;text-align:left;">Tanggal</th>
+        <th style="padding:8px;text-align:left;">Keterangan</th>
+        <th style="padding:8px;text-align:right;">Nominal</th>
+      </tr></thead>
+      <tbody>
+        ${riwayat.map(r=>`<tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:7px 8px;font-weight:700">${r.ke}</td>
+          <td style="padding:7px 8px;">${fmtDate(r.tgl)}</td>
+          <td style="padding:7px 8px;">${r.ket||'-'}</td>
+          <td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:700">${fmtRp(r.nominal)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`}
+    <div style="margin-top:14px;">
+      <button class="btn btn-success" onclick="bukaBayarCicilan(${h.id})">💳 Bayar Cicilan Sekarang</button>
+    </div>
+  `;
+  panel.scrollIntoView({ behavior: 'smooth' });
 }
 
 // ===========================
