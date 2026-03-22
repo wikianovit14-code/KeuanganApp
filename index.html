@@ -3180,6 +3180,13 @@ const DEFAULT_DATA = {
     {id:4, nama:'GoPay', tipe:'digital', icon:'🟢', warna:'#00aa13', saldo:100000},
     {id:5, nama:'ShopeePay', tipe:'digital', icon:'🟠', warna:'#ee4d2d', saldo:75000},
   ],
+  dompet: [
+    {id:1, nama:'Dompet Tunai', tipe:'tunai', icon:'💵', warna:'#27ae60', saldo:0},
+    {id:2, nama:'Dana', tipe:'digital', icon:'🔵', warna:'#0066ff', saldo:0},
+    {id:3, nama:'OVO', tipe:'digital', icon:'🟣', warna:'#4b0082', saldo:0},
+    {id:4, nama:'GoPay', tipe:'digital', icon:'🟢', warna:'#00aa13', saldo:0},
+    {id:5, nama:'ShopeePay', tipe:'digital', icon:'🟠', warna:'#ee4d2d', saldo:0},
+  ],
   nextId: {kat:7, tr:7, hp:4, rek:4, tg:5, dom:6},
   mutasi: [],
   profilePhoto: null,
@@ -3638,6 +3645,14 @@ function updateDashboard() {
   renderYearFilterCards();
 }
 
+function getNextCicilanDate(h) {
+  if (!h.tgl || !h.tglCicilan) return null;
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth(), h.tglCicilan===31 ? new Date(now.getFullYear(),now.getMonth()+1,0).getDate() : h.tglCicilan);
+  if (d < now) d.setMonth(d.getMonth()+1);
+  return d.toISOString().split('T')[0];
+}
+
 function checkHutangReminder() {
   const now = new Date();
   const soon7 = new Date(now.getTime() + 7*24*60*60*1000);
@@ -3704,19 +3719,20 @@ function isInPeriod(tgl, periode, now) {
 }
 
 function setDashYearFilter(year) {
-  dashYearFilter = year; // null = semua tahun
-  
-  // Update card labels to show which year is active
+  dashYearFilter = year;
+
+  // Update card labels
   const yr = year || new Date().getFullYear();
-  const suffix = year ? ` ${year}` : ' Ini';
   const setLbl = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
-  setLbl('lbl-masuk-hari',   year ? `Pemasukan Hari (${yr})` : 'Pemasukan Hari Ini');
-  setLbl('lbl-masuk-bulan',  year ? `Pemasukan Bulan (${yr})` : 'Pemasukan Bulan Ini');
-  setLbl('lbl-masuk-tahun',  year ? `Pemasukan ${yr}` : 'Pemasukan Tahun Ini');
+  setLbl('lbl-masuk-hari',  year ? `Pemasukan Hari (${yr})` : 'Pemasukan Hari Ini');
+  setLbl('lbl-masuk-bulan', year ? `Pemasukan Bulan (${yr})` : 'Pemasukan Bulan Ini');
+  setLbl('lbl-masuk-tahun', year ? `Pemasukan ${yr}` : 'Pemasukan Tahun Ini');
 
   updateCards();
-  updateChartData();
+  // Reinit chart completely so year filter applies to chart data
+  initChart();
   updateChartSummary();
+  renderYearFilterCards();
 }
 
 const cardPeriods = ['hari','bulan','tahun','all','hari','bulan','tahun','all'];
@@ -3862,12 +3878,13 @@ function getChartLabels(period) {
 
 function getChartData(period, jenis) {
   const now = new Date();
+  const useYear = dashYearFilter || now.getFullYear();
   const labels = getChartLabels(period);
-  
+
   if (period === 'bulan') {
     return labels.map((_,mi) => {
       return store.transaksi
-        .filter(t => t.jenis===jenis && new Date(t.tgl).getMonth()===mi && new Date(t.tgl).getFullYear()===now.getFullYear())
+        .filter(t => t.jenis===jenis && new Date(t.tgl).getMonth()===mi && new Date(t.tgl).getFullYear()===useYear)
         .reduce((s,t) => s+t.nominal, 0);
     });
   } else if (period === 'hari') {
@@ -3875,11 +3892,13 @@ function getChartData(period, jenis) {
       const d = new Date(now);
       d.setDate(now.getDate() - (6-i));
       const ds = d.toISOString().split('T')[0];
+      // If year filter active, only show if day is in that year
+      if (dashYearFilter && d.getFullYear() !== dashYearFilter) return 0;
       return store.transaksi.filter(t=>t.jenis===jenis && t.tgl===ds).reduce((s,t)=>s+t.nominal,0);
     });
   } else if (period === 'tahun') {
-    const yr = now.getFullYear();
-    return [yr-3,yr-2,yr-1,yr].map(y => {
+    // Show 4 years centered around selected year
+    return [useYear-3, useYear-2, useYear-1, useYear].map(y => {
       return store.transaksi.filter(t=>t.jenis===jenis && new Date(t.tgl).getFullYear()===y).reduce((s,t)=>s+t.nominal,0);
     });
   }
@@ -4362,6 +4381,8 @@ function saveTransaksi() {
   saveStore();
   closeModal('modalTransaksi');
   renderTransaksi();
+  // Update dompet page if open
+  if (document.getElementById('page-dompet')?.classList.contains('active')) renderDompet();
   showToast(editId ? 'Transaksi berhasil diupdate!' : 'Transaksi berhasil ditambahkan!');
 }
 
@@ -4694,13 +4715,7 @@ function renderHutang() {
   });
 }
 
-function getNextCicilanDate(h) {
-  if (!h.tgl || !h.tglCicilan) return null;
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), h.tglCicilan===31 ? new Date(now.getFullYear(),now.getMonth()+1,0).getDate() : h.tglCicilan);
-  if (d < now) d.setMonth(d.getMonth()+1);
-  return d.toISOString().split('T')[0];
-}
+
 
 function checkCicilanReminder() {
   const now = new Date();
@@ -6270,8 +6285,10 @@ function openModal(id, title) {
     const sel = document.getElementById('tr-kategori');
     sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
     store.kategori.forEach(k => {
-      sel.innerHTML += `<option value="${k.nama}">${k.nama}</option>`;
+      sel.innerHTML += `<option value="${k.nama}">${k.icon||'💰'} ${k.nama}</option>`;
     });
+    // Populate sumber dana dropdown
+    populateSumberDana();
     // Reset color + target field
     updateTransaksiColor();
     toggleTargetField();
@@ -6305,16 +6322,26 @@ function openModal(id, title) {
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('show');
-  // Clear formatted money inputs inside this modal
-  document.querySelectorAll('#'+id+' input[inputmode="numeric"]').forEach(el => {
-    // Only clear if not editing (hidden id is empty)
-  });
   // Clear struk label
   const struk = document.getElementById('struk-label');
   if (struk) { struk.textContent = '📎 Klik untuk upload struk (gambar/PDF)'; struk.style.color = ''; }
   _pendingStruk = null;
   const sf = document.getElementById('struk-file');
   if (sf) sf.value = '';
+  // Reset transaksi modal extras
+  if (id === 'modalTransaksi') {
+    const sumberInfo = document.getElementById('tr-sumber-info');
+    if (sumberInfo) sumberInfo.style.display = 'none';
+    const targetRow = document.getElementById('tr-target-row');
+    if (targetRow) targetRow.style.display = 'none';
+    // Reset modal header color back to orange
+    const header = document.querySelector('#modalTransaksi .modal-header');
+    if (header) header.style.background = 'var(--orange)';
+    const saveBtn = document.querySelector('#modalTransaksi .modal-footer .btn:last-child');
+    if (saveBtn) saveBtn.style.background = 'var(--orange)';
+    const bar = document.getElementById('tr-color-bar');
+    if (bar) bar.style.background = 'transparent';
+  }
 }
 
 // Close modal on overlay click
