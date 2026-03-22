@@ -1419,14 +1419,30 @@ table tbody tr:hover { background: #fafafa; }
         <!-- Ringkasan Tahun Terpilih -->
         <div class="summary-card" style="background:var(--black-card);cursor:default;">
           <div class="card-icon" style="opacity:.6;">📊</div>
-          <div class="card-label" id="year-summary-title" style="opacity:.7;margin-bottom:10px;">Ringkasan Tahun Ini</div>
-          <div style="margin-bottom:6px;">
+          <div class="card-label" id="year-summary-title" style="opacity:.7;margin-bottom:8px;">Ringkasan Tahun Ini</div>
+          <div style="margin-bottom:5px;">
             <div style="font-size:10px;opacity:.55;margin-bottom:2px;">TOTAL PEMASUKAN</div>
-            <div id="year-sum-masuk" style="font-size:17px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#7dcea0;letter-spacing:.5px;">Rp. 0</div>
+            <div id="year-sum-masuk" style="font-size:16px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#7dcea0;letter-spacing:.5px;">Rp. 0</div>
           </div>
-          <div>
+          <div style="margin-bottom:8px;">
             <div style="font-size:10px;opacity:.55;margin-bottom:2px;">TOTAL PENGELUARAN</div>
-            <div id="year-sum-keluar" style="font-size:17px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#f1948a;letter-spacing:.5px;">Rp. 0</div>
+            <div id="year-sum-keluar" style="font-size:16px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#f1948a;letter-spacing:.5px;">Rp. 0</div>
+          </div>
+          <!-- Garis pemisah -->
+          <div style="border-top:1px solid rgba(255,255,255,.15);padding-top:7px;">
+            <div style="font-size:10px;opacity:.55;margin-bottom:4px;">📦 KESELURUHAN (SEMUA TAHUN)</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font-size:10px;color:#7dcea0;opacity:.8;">Pemasukan</span>
+              <span id="all-sum-masuk" style="font-size:12px;font-weight:700;color:#7dcea0;">Rp. 0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font-size:10px;color:#f1948a;opacity:.8;">Pengeluaran</span>
+              <span id="all-sum-keluar" style="font-size:12px;font-weight:700;color:#f1948a;">Rp. 0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.1);padding-top:3px;margin-top:2px;">
+              <span style="font-size:10px;opacity:.6;">Selisih</span>
+              <span id="all-sum-selisih" style="font-size:12px;font-weight:700;">Rp. 0</span>
+            </div>
           </div>
           <div id="card-masuk-all" style="display:none;"></div>
           <div id="card-keluar-all" style="display:none;"></div>
@@ -3494,6 +3510,20 @@ function renderYearFilterCards() {
   if (titleEl) titleEl.textContent = dashYearFilter ? `Ringkasan ${dashYearFilter}` : `Ringkasan ${useYear}`;
   if (sumMasuk) sumMasuk.textContent = fmtRpShort(masukTotal);
   if (sumKeluar) sumKeluar.textContent = fmtRpShort(keluarTotal);
+
+  // All-time totals (always shown, regardless of year filter)
+  const allMasuk = store.transaksi.filter(t=>t.jenis==='Pemasukan').reduce((s,t)=>s+t.nominal,0);
+  const allKeluar = store.transaksi.filter(t=>t.jenis==='Pengeluaran').reduce((s,t)=>s+t.nominal,0);
+  const selisih = allMasuk - allKeluar;
+  const allMasukEl = document.getElementById('all-sum-masuk');
+  const allKeluarEl = document.getElementById('all-sum-keluar');
+  const selisihEl = document.getElementById('all-sum-selisih');
+  if (allMasukEl) allMasukEl.textContent = fmtRpShort(allMasuk);
+  if (allKeluarEl) allKeluarEl.textContent = fmtRpShort(allKeluar);
+  if (selisihEl) {
+    selisihEl.textContent = (selisih >= 0 ? '+' : '') + fmtRpShort(selisih);
+    selisihEl.style.color = selisih >= 0 ? '#7dcea0' : '#f1948a';
+  }
 }
 
 function updateCards() {
