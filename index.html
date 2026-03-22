@@ -1406,15 +1406,18 @@ table tbody tr:hover { background: #fafafa; }
     <div class="page" id="page-rekening">
       <div class="page-header">
         <div class="page-title"><h2>🏦 Rekening Bank</h2></div>
-        <button class="btn btn-primary" onclick="openModal('modalRekening','Tambah Rekening')">➕ Tambah Rekening</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-warning" onclick="openModal('modalTransferATM','Tarik / Transfer ATM')">🏧 Tarik/Transfer</button>
+          <button class="btn btn-primary" onclick="openModal('modalRekening','Tambah Rekening')">➕ Tambah Rekening</button>
+        </div>
       </div>
       <div class="rek-stats">
         <div class="rek-stat-card green">
-          <div class="rsk-label">Total Saldo</div>
+          <div class="rsk-label">Total Saldo Semua Rekening</div>
           <div class="rsk-value" id="rek-total-saldo">Rp. 0</div>
         </div>
         <div class="rek-stat-card red">
-          <div class="rsk-label">Total Potongan/Bulan</div>
+          <div class="rsk-label">Total Admin/Bulan</div>
           <div class="rsk-value" id="rek-total-potongan">Rp. 0</div>
         </div>
         <div class="rek-stat-card">
@@ -1422,17 +1425,43 @@ table tbody tr:hover { background: #fafafa; }
           <div class="rsk-value" id="rek-total-bersih">Rp. 0</div>
         </div>
       </div>
+
+      <!-- Admin auto-cut reminder -->
+      <div id="admin-reminder" style="display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#e65100;">
+        <strong>⚠️ Perhatian:</strong> <span id="admin-reminder-text"></span>
+        <button class="btn btn-sm" style="background:#e65100;color:#fff;margin-left:10px;" onclick="prosesAdminBulanan()">Proses Sekarang</button>
+      </div>
+
       <div class="card-box">
         <div class="card-box-header">
           <h3>Daftar Rekening Bank</h3>
+          <span style="font-size:11px;color:#888;">Biaya admin dipotong otomatis akhir bulan</span>
         </div>
         <div class="table-wrap">
           <table id="tbl-rekening">
             <thead><tr>
-              <th>No</th><th>Nama Rekening</th><th>Nomor Rekening</th><th>Bank</th>
-              <th>Jumlah Saldo</th><th>Potongan/Bulan</th><th>Saldo Bersih</th><th>Aksi</th>
+              <th>No</th><th>Nama Rekening</th><th>No. Rekening</th><th>Bank</th>
+              <th>Saldo</th><th>Admin/Bulan</th><th>Saldo Bersih</th><th>Aksi</th>
             </tr></thead>
             <tbody id="tbody-rekening"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Riwayat mutasi rekening -->
+      <div class="card-box" style="margin-top:14px;">
+        <div class="card-box-header">
+          <h3>📋 Riwayat Mutasi Rekening</h3>
+          <select id="filter-mutasi-rek" onchange="renderMutasi()" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+            <option value="">Semua Rekening</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Tgl</th><th>Rekening</th><th>Keterangan</th><th>Jenis</th><th>Nominal</th><th>Saldo Sesudah</th>
+            </tr></thead>
+            <tbody id="tbody-mutasi"></tbody>
           </table>
         </div>
       </div>
@@ -1652,7 +1681,7 @@ table tbody tr:hover { background: #fafafa; }
         </div>
         <div class="form-group">
           <label>Nominal (Rp) *</label>
-          <input type="number" id="tr-nominal" placeholder="0" min="0">
+          <input type="text" id="tr-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
         </div>
       </div>
       <div class="form-row">
@@ -1714,7 +1743,7 @@ table tbody tr:hover { background: #fafafa; }
       <div class="form-row">
         <div class="form-group">
           <label>Nominal (Rp) *</label>
-          <input type="number" id="hp-nominal" placeholder="0" min="0">
+          <input type="text" id="hp-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
         </div>
         <div class="form-group">
           <label>Bunga (%)</label>
@@ -1738,7 +1767,7 @@ table tbody tr:hover { background: #fafafa; }
       <div class="form-row">
         <div class="form-group">
           <label>Cicilan Dibayar (Rp)</label>
-          <input type="number" id="hp-cicilan" placeholder="0" min="0">
+          <input type="text" id="hp-cicilan" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
         </div>
       </div>
     </div>
@@ -1769,7 +1798,7 @@ table tbody tr:hover { background: #fafafa; }
             <option value="">-- Pilih Bank --</option>
             <option>BCA</option><option>Mandiri</option><option>BNI</option>
             <option>BRI</option><option>CIMB Niaga</option><option>Danamon</option>
-            <option>Permata</option><option>BTN</option><option>Lainnya</option>
+            <option>Permata</option><option>BTN</option><option>Bank Jambi</option><option>Lainnya</option>
           </select>
         </div>
       </div>
@@ -1781,18 +1810,153 @@ table tbody tr:hover { background: #fafafa; }
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Jumlah Saldo (Rp)</label>
-          <input type="number" id="rek-saldo" placeholder="0" min="0">
+          <label>Saldo Saat Ini (Rp)</label>
+          <input type="text" id="rek-saldo" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
         </div>
-        <div class="form-group">
-          <label>Potongan/Bulan (Rp)</label>
-          <input type="number" id="rek-potongan" placeholder="0" min="0">
+      </div>
+      <div style="background:#f0f4ff;border-radius:6px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;">⚙️ Pengaturan Biaya Admin Otomatis</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Biaya Admin/Bulan (Rp)</label>
+            <input type="text" id="rek-admin" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+          </div>
+          <div class="form-group">
+            <label>Tanggal Potong</label>
+            <select id="rek-tgl-admin">
+              <option value="31">Akhir Bulan</option>
+              <option value="1">Tanggal 1</option>
+              <option value="5">Tanggal 5</option>
+              <option value="10">Tanggal 10</option>
+              <option value="15">Tanggal 15</option>
+              <option value="20">Tanggal 20</option>
+              <option value="25">Tanggal 25</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modalRekening')" style="background:#eee;color:#555;">Batal</button>
       <button class="btn btn-primary" onclick="saveRekening()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tarik/Transfer ATM -->
+<div class="modal-overlay" id="modalTransferATM">
+  <div class="modal" style="width:560px">
+    <div class="modal-header" style="background:var(--orange)">
+      <h3>🏧 Tarik / Transfer ATM / Banking</h3>
+      <button class="modal-close" onclick="closeModal('modalTransferATM')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Tab: Manual / Upload Struk -->
+      <div style="display:flex;background:#f0f2f5;border-radius:6px;padding:3px;margin-bottom:14px;">
+        <button id="tab-manual-btn" onclick="switchATMTab('manual')" style="flex:1;padding:7px;border:none;border-radius:4px;background:var(--orange);color:#fff;font-family:var(--font-main);font-size:12px;font-weight:700;cursor:pointer;">✍️ Input Manual</button>
+        <button id="tab-struk-btn" onclick="switchATMTab('struk')" style="flex:1;padding:7px;border:none;border-radius:4px;background:transparent;color:#888;font-family:var(--font-main);font-size:12px;cursor:pointer;">📷 Upload Struk</button>
+      </div>
+
+      <!-- Tab Manual -->
+      <div id="tab-manual">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rekening *</label>
+            <select id="atm-rekening"></select>
+          </div>
+          <div class="form-group">
+            <label>Jenis *</label>
+            <select id="atm-jenis" onchange="updateATMBiaya()">
+              <option value="Tarik Tunai">🏧 Tarik Tunai</option>
+              <option value="Transfer BI-Fast">⚡ Transfer BI-Fast (Rp2.500)</option>
+              <option value="Transfer SKN">📋 Transfer SKN (Rp2.900)</option>
+              <option value="Transfer RTGS">🏦 Transfer RTGS (Rp25.000)</option>
+              <option value="Transfer Sesama">🤝 Transfer Sesama Bank (Gratis)</option>
+              <option value="Setor Tunai">💵 Setor Tunai</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nominal (Rp) *</label>
+            <input type="text" id="atm-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this);updateATMTotal()">
+          </div>
+          <div class="form-group">
+            <label>Tanggal</label>
+            <input type="date" id="atm-tgl">
+          </div>
+        </div>
+        <div id="atm-biaya-row" style="display:none;background:#fff3e0;border-radius:6px;padding:10px;margin-bottom:10px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span>Biaya Transfer:</span>
+            <strong id="atm-biaya-label" style="color:var(--red)">Rp. 0 ,-</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;border-top:1px solid #ffe0b2;padding-top:4px;">
+            <span>Total Dipotong:</span>
+            <strong id="atm-total-label" style="color:var(--red)">Rp. 0 ,-</strong>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Keterangan</label>
+            <input type="text" id="atm-ket" placeholder="Contoh: Bayar listrik, Transfer ke bu Siti...">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Upload Struk -->
+      <div id="tab-struk" style="display:none;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rekening *</label>
+            <select id="atm-struk-rekening"></select>
+          </div>
+        </div>
+        <div class="upload-zone" onclick="document.getElementById('atm-struk-file').click()" style="margin-bottom:12px;">
+          <input type="file" id="atm-struk-file" accept="image/*" onchange="handleATMStruk(event)">
+          <div>📷 Foto / Upload Struk ATM</div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px;">JPG, PNG — akan dibaca otomatis</div>
+        </div>
+        <div id="atm-struk-preview" style="display:none;margin-bottom:12px;">
+          <img id="atm-struk-img" style="max-width:100%;border-radius:6px;border:1px solid #ddd;">
+        </div>
+        <div id="atm-struk-form" style="display:none;">
+          <div style="background:#e8f5e9;border-radius:6px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--green-dark);">
+            ✅ Struk terdeteksi — periksa & sesuaikan data di bawah ini
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Jenis Transaksi</label>
+              <select id="atm-struk-jenis">
+                <option value="Tarik Tunai">🏧 Tarik Tunai</option>
+                <option value="Transfer BI-Fast">⚡ Transfer BI-Fast</option>
+                <option value="Transfer SKN">📋 Transfer SKN</option>
+                <option value="Transfer RTGS">🏦 Transfer RTGS</option>
+                <option value="Transfer Sesama">🤝 Transfer Sesama Bank</option>
+                <option value="Setor Tunai">💵 Setor Tunai</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Nominal (Rp)</label>
+              <input type="text" id="atm-struk-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tanggal</label>
+              <input type="date" id="atm-struk-tgl">
+            </div>
+            <div class="form-group">
+              <label>Keterangan</label>
+              <input type="text" id="atm-struk-ket" placeholder="Keterangan transaksi...">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalTransferATM')" style="background:#eee;color:#555;">Batal</button>
+      <button class="btn btn-warning" onclick="simpanTransaksiATM()">💾 Simpan & Update Saldo</button>
     </div>
   </div>
 </div>
@@ -1828,11 +1992,11 @@ table tbody tr:hover { background: #fafafa; }
       <div class="form-row">
         <div class="form-group">
           <label>Nominal Target (Rp) *</label>
-          <input type="number" id="tg-target" placeholder="0" min="0">
+          <input type="text" id="tg-target" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
         </div>
         <div class="form-group">
           <label>Sudah Tercapai (Rp)</label>
-          <input type="number" id="tg-tercapai" placeholder="0" min="0">
+          <input type="text" id="tg-tercapai" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
         </div>
       </div>
     </div>
@@ -2050,9 +2214,9 @@ const DEFAULT_DATA = {
     {id:3, tgl:'2025-01-10', kontak:'Siti Rahma', invoice:'INV-003', ket:'Pinjaman teman', jenis:'Piutang', nominal:500000, bunga:0, jatuh:'2025-02-10', status:'Lunas', cicilan:500000},
   ],
   rekening: [
-    {id:1, nama:'Tabungan Utama', nomor:'1234-5678-9012', bank:'BCA', saldo:15000000, potongan:50000},
-    {id:2, nama:'Tabungan Bisnis', nomor:'9876-5432-1098', bank:'Mandiri', saldo:8500000, potongan:25000},
-    {id:3, nama:'Rekening Giro', nomor:'1122-3344-5566', bank:'BNI', saldo:3000000, potongan:15000},
+    {id:1, nama:'Tabungan Utama', nomor:'1234-5678-9012', bank:'BCA', saldo:15000000, adminBulanan:15000, tglAdmin:31, lastAdminMonth:'', biayaTransfer:0},
+    {id:2, nama:'Tabungan Bisnis', nomor:'9876-5432-1098', bank:'Mandiri', saldo:8500000, adminBulanan:12500, tglAdmin:31, lastAdminMonth:'', biayaTransfer:0},
+    {id:3, nama:'Rekening Giro', nomor:'1122-3344-5566', bank:'BNI', saldo:3000000, adminBulanan:10000, tglAdmin:31, lastAdminMonth:'', biayaTransfer:0},
   ],
   target: [
     {id:1, nama:'Dana Darurat', icon:'🛡️', target:10000000, tercapai:3500000},
@@ -2061,6 +2225,7 @@ const DEFAULT_DATA = {
     {id:4, nama:'Investasi', icon:'📈', target:20000000, tercapai:8000000},
   ],
   nextId: {kat:7, tr:7, hp:4, rek:4, tg:5},
+  mutasi: [],
   profilePhoto: null,
   profile: {nama:'Wiki Ade Novit, S.E', email:'wiki.ade@keuangan.com', telp:'+62 812-XXXX-XXXX', jabatan:'Administrator', dept:'Keuangan & Akuntansi'},
 };
@@ -2381,6 +2546,45 @@ function closeMoreMenu() {
 // ===========================
 // FORMAT
 // ===========================
+
+// Format input field with thousand separators while typing
+function fmtInput(el) {
+  // Get cursor position
+  const pos = el.selectionStart;
+  const oldLen = el.value.length;
+  
+  // Strip non-digits
+  let raw = el.value.replace(/[^0-9]/g, '');
+  
+  // Limit to 15 digits (max ~999 triliun)
+  if (raw.length > 15) raw = raw.slice(0, 15);
+  
+  // Format with dots
+  if (raw === '') { el.value = ''; return; }
+  const formatted = parseInt(raw, 10).toLocaleString('id-ID');
+  el.value = formatted;
+  
+  // Restore cursor position (adjusted for added dots)
+  const newLen = el.value.length;
+  const diff = newLen - oldLen;
+  try { el.setSelectionRange(pos + diff, pos + diff); } catch(e) {}
+}
+
+// Get raw number from formatted input
+function getRawNum(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  return parseFloat(el.value.replace(/[^0-9]/g, '')) || 0;
+}
+
+// Set formatted value to input
+function setFmtInput(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!val && val !== 0) { el.value = ''; return; }
+  el.value = Number(val).toLocaleString('id-ID');
+}
+
 function fmtRp(n) {
   if (isNaN(n) || n === null) return 'Rp. 0 ,-';
   return 'Rp. ' + Number(n).toLocaleString('id-ID') + ' ,-';
@@ -2792,7 +2996,7 @@ function saveTransaksi() {
   const kat = document.getElementById('tr-kategori').value;
   const jenis = document.getElementById('tr-jenis').value;
   const ket = document.getElementById('tr-ket').value.trim();
-  const nominal = parseFloat(document.getElementById('tr-nominal').value) || 0;
+  const nominal = getRawNum('tr-nominal') || 0;
   const editId = document.getElementById('tr-edit-id').value;
   
   if (!tgl || !jenis || !nominal) return showToast('Tanggal, Jenis, dan Nominal wajib diisi!','red');
@@ -2822,7 +3026,7 @@ function editTransaksi(id) {
   document.getElementById('tr-jam').value = t.jam||'';
   document.getElementById('tr-jenis').value = t.jenis;
   document.getElementById('tr-ket').value = t.ket||'';
-  document.getElementById('tr-nominal').value = t.nominal;
+  setFmtInput('tr-nominal', t.nominal);
   // Set kategori
   renderTransaksi();
   setTimeout(()=>{document.getElementById('tr-kategori').value = t.kat;},50);
@@ -2921,11 +3125,11 @@ function saveHutang() {
   const kontak = document.getElementById('hp-kontak').value.trim();
   const invoice = document.getElementById('hp-invoice').value.trim();
   const ket = document.getElementById('hp-ket').value.trim();
-  const nominal = parseFloat(document.getElementById('hp-nominal').value)||0;
+  const nominal = getRawNum('hp-nominal');
   const bunga = parseFloat(document.getElementById('hp-bunga').value)||0;
   const jatuh = document.getElementById('hp-jatuh').value;
   const status = document.getElementById('hp-status').value;
-  const cicilan = parseFloat(document.getElementById('hp-cicilan').value)||0;
+  const cicilan = getRawNum('hp-cicilan');
   const editId = document.getElementById('hp-edit-id').value;
   
   if (!tgl||!jenis||!kontak||!nominal) return showToast('Data wajib diisi!','red');
@@ -2952,11 +3156,11 @@ function editHutang(id) {
   document.getElementById('hp-kontak').value = h.kontak;
   document.getElementById('hp-invoice').value = h.invoice;
   document.getElementById('hp-ket').value = h.ket;
-  document.getElementById('hp-nominal').value = h.nominal;
+  setFmtInput('hp-nominal', h.nominal);
   document.getElementById('hp-bunga').value = h.bunga;
   document.getElementById('hp-jatuh').value = h.jatuh;
   document.getElementById('hp-status').value = h.status;
-  document.getElementById('hp-cicilan').value = h.cicilan;
+  setFmtInput('hp-cicilan', h.cicilan);
   openModal('modalHutang','Edit Hutang/Piutang');
 }
 
@@ -2971,54 +3175,189 @@ function deleteHutang(id) {
 // ===========================
 // REKENING BANK
 // ===========================
+// Biaya transfer constants
+const BIAYA_TRANSFER = {
+  'Tarik Tunai': 0,
+  'Transfer BI-Fast': 2500,
+  'Transfer SKN': 2900,
+  'Transfer RTGS': 25000,
+  'Transfer Sesama': 0,
+  'Setor Tunai': 0,
+};
+
 function renderRekening() {
   const tbody = document.getElementById('tbody-rekening');
   tbody.innerHTML = '';
-  let totalSaldo=0, totalPotongan=0;
-  
+  let totalSaldo=0, totalAdmin=0;
+
+  // Check if admin needs to be processed
+  checkAdminReminder();
+
+  // Populate mutasi filter
+  const filterSel = document.getElementById('filter-mutasi-rek');
+  if (filterSel) {
+    const curVal = filterSel.value;
+    filterSel.innerHTML = '<option value="">Semua Rekening</option>';
+    store.rekening.forEach(r => {
+      filterSel.innerHTML += `<option value="${r.id}" ${curVal==r.id?'selected':''}>${r.nama}</option>`;
+    });
+  }
+
   store.rekening.forEach((r,i) => {
-    const bersih = r.saldo - r.potongan;
+    const admin = r.adminBulanan || r.potongan || 0;
+    const bersih = r.saldo - admin;
     totalSaldo += r.saldo;
-    totalPotongan += r.potongan;
-    
+    totalAdmin += admin;
+    const tglAdminLabel = r.tglAdmin == 31 ? 'Akhir Bulan' : 'Tgl ' + r.tglAdmin;
+    const lastAdmin = r.lastAdminMonth ? `<br><small style="color:#aaa">Terakhir: ${r.lastAdminMonth}</small>` : '';
+
     tbody.innerHTML += `
     <tr>
       <td>${i+1}</td>
       <td><strong>${r.nama}</strong></td>
-      <td><code>${r.nomor}</code></td>
+      <td><code style="font-size:11px">${r.nomor}</code></td>
       <td><span class="badge badge-info">${r.bank}</span></td>
       <td style="font-weight:700;color:var(--green)">${fmtRp(r.saldo)}</td>
-      <td style="color:var(--red)">${fmtRp(r.potongan)}</td>
+      <td style="color:var(--red);font-size:12px">${fmtRp(admin)}<br><small style="color:#aaa">${tglAdminLabel}</small>${lastAdmin}</td>
       <td style="font-weight:700;color:var(--blue)">${fmtRp(bersih)}</td>
-      <td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-warning" onclick="quickTransfer(${r.id})" title="Tarik/Transfer">🏧</button>
         <button class="btn btn-sm btn-primary" onclick="editRekening(${r.id})">✏️</button>
         <button class="btn btn-sm btn-danger" onclick="deleteRekening(${r.id})">🗑️</button>
       </td>
     </tr>`;
   });
-  
+
   document.getElementById('rek-total-saldo').textContent = fmtRpShort(totalSaldo);
-  document.getElementById('rek-total-potongan').textContent = fmtRpShort(totalPotongan);
-  document.getElementById('rek-total-bersih').textContent = fmtRpShort(totalSaldo - totalPotongan);
+  document.getElementById('rek-total-potongan').textContent = fmtRpShort(totalAdmin);
+  document.getElementById('rek-total-bersih').textContent = fmtRpShort(totalSaldo - totalAdmin);
+
+  renderMutasi();
+}
+
+function checkAdminReminder() {
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const isLastDay = now.getDate() === lastDay;
+  const curMonth = now.getFullYear() + '-' + (now.getMonth()+1);
+
+  const needProcess = store.rekening.filter(r => {
+    const admin = r.adminBulanan || 0;
+    if (!admin) return false;
+    const shouldCut = r.tglAdmin == 31 ? isLastDay : now.getDate() >= r.tglAdmin;
+    return shouldCut && r.lastAdminMonth !== curMonth;
+  });
+
+  const rem = document.getElementById('admin-reminder');
+  const remText = document.getElementById('admin-reminder-text');
+  if (rem && needProcess.length > 0) {
+    rem.style.display = 'block';
+    const names = needProcess.map(r=>r.nama).join(', ');
+    remText.textContent = `Biaya admin bulan ini belum diproses untuk: ${names}`;
+  } else if (rem) {
+    rem.style.display = 'none';
+  }
+}
+
+function prosesAdminBulanan() {
+  const now = new Date();
+  const curMonth = now.getFullYear() + '-' + (now.getMonth()+1);
+  const lastDay = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  let count = 0;
+
+  store.rekening.forEach(r => {
+    const admin = r.adminBulanan || 0;
+    if (!admin || r.lastAdminMonth === curMonth) return;
+    const shouldCut = r.tglAdmin == 31 ? true : now.getDate() >= r.tglAdmin;
+    if (!shouldCut) return;
+
+    // Potong saldo
+    r.saldo = Math.max(0, r.saldo - admin);
+    r.lastAdminMonth = curMonth;
+
+    // Catat ke transaksi
+    const tgl = r.tglAdmin == 31
+      ? `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`
+      : `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(r.tglAdmin).padStart(2,'0')}`;
+
+    store.transaksi.push({
+      id: store.nextId.tr++,
+      tgl, jam: '00:00:00',
+      kat: 'Biaya Admin Bank',
+      ket: `Biaya admin ${r.bank} - ${r.nama}`,
+      jenis: 'Pengeluaran',
+      nominal: admin,
+      struk: null,
+      rekeningId: r.id,
+    });
+
+    // Catat mutasi
+    if (!store.mutasi) store.mutasi = [];
+    store.mutasi.push({
+      id: Date.now() + count,
+      tgl, rekId: r.id, rekNama: r.nama,
+      ket: `Biaya Admin ${r.bank}`,
+      jenis: 'Debit', nominal: admin,
+      saldoSesudah: r.saldo,
+    });
+    count++;
+  });
+
+  if (count > 0) {
+    saveStore();
+    renderRekening();
+    renderTransaksi();
+    showToast(`✅ Biaya admin ${count} rekening berhasil dipotong!`);
+  } else {
+    showToast('Tidak ada admin yang perlu diproses', 'orange');
+  }
+}
+
+function renderMutasi() {
+  const tbody = document.getElementById('tbody-mutasi');
+  if (!tbody) return;
+  const filterRekId = document.getElementById('filter-mutasi-rek')?.value;
+  let data = [...(store.mutasi||[])].sort((a,b)=>b.tgl.localeCompare(a.tgl)||b.id-a.id).slice(0,30);
+  if (filterRekId) data = data.filter(m=>m.rekId==filterRekId);
+
+  tbody.innerHTML = '';
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px;">Belum ada mutasi</td></tr>';
+    return;
+  }
+  data.forEach(m => {
+    const isDebit = m.jenis === 'Debit';
+    tbody.innerHTML += `<tr>
+      <td style="font-size:11px">${fmtDate(m.tgl)}</td>
+      <td><strong>${m.rekNama}</strong></td>
+      <td>${m.ket}</td>
+      <td><span class="badge ${isDebit?'badge-danger':'badge-success'}">${isDebit?'⬇ Debit':'⬆ Kredit'}</span></td>
+      <td style="color:${isDebit?'var(--red)':'var(--green)'};font-weight:700">${isDebit?'-':'+'} ${fmtRp(m.nominal)}</td>
+      <td style="font-size:12px;color:var(--blue)">${fmtRp(m.saldoSesudah)}</td>
+    </tr>`;
+  });
 }
 
 function saveRekening() {
   const nama = document.getElementById('rek-nama').value.trim();
   const bank = document.getElementById('rek-bank').value;
   const nomor = document.getElementById('rek-nomor').value.trim();
-  const saldo = parseFloat(document.getElementById('rek-saldo').value)||0;
-  const potongan = parseFloat(document.getElementById('rek-potongan').value)||0;
+  const saldo = getRawNum('rek-saldo');
+  const adminBulanan = getRawNum('rek-admin');
+  const tglAdmin = document.getElementById('rek-tgl-admin').value || '31';
   const editId = document.getElementById('rek-edit-id').value;
-  
+
   if (!nama||!bank||!nomor) return showToast('Data wajib diisi!','red');
-  
+
   if (editId) {
     const idx = store.rekening.findIndex(r=>r.id==editId);
-    store.rekening[idx] = {...store.rekening[idx], nama, bank, nomor, saldo, potongan};
+    store.rekening[idx] = {...store.rekening[idx], nama, bank, nomor, saldo, adminBulanan, tglAdmin,
+      potongan: adminBulanan};
   } else {
-    store.rekening.push({id:store.nextId.rek++, nama, bank, nomor, saldo, potongan});
+    store.rekening.push({id:store.nextId.rek++, nama, bank, nomor, saldo,
+      adminBulanan, tglAdmin, lastAdminMonth:'', potongan: adminBulanan, biayaTransfer:0});
   }
-  
+
   saveStore();
   closeModal('modalRekening');
   renderRekening();
@@ -3031,8 +3370,9 @@ function editRekening(id) {
   document.getElementById('rek-nama').value = r.nama;
   document.getElementById('rek-bank').value = r.bank;
   document.getElementById('rek-nomor').value = r.nomor;
-  document.getElementById('rek-saldo').value = r.saldo;
-  document.getElementById('rek-potongan').value = r.potongan;
+  setFmtInput('rek-saldo', r.saldo);
+  setFmtInput('rek-admin', r.adminBulanan || r.potongan || 0);
+  document.getElementById('rek-tgl-admin').value = r.tglAdmin || '31';
   openModal('modalRekening','Edit Rekening');
 }
 
@@ -3042,6 +3382,169 @@ function deleteRekening(id) {
   saveStore();
   renderRekening();
   showToast('Rekening dihapus!','red');
+}
+
+// Quick transfer button per row
+function quickTransfer(rekId) {
+  openModal('modalTransferATM','Tarik / Transfer ATM');
+  setTimeout(() => {
+    populateATMRekeningSelect();
+    document.getElementById('atm-rekening').value = rekId;
+  }, 50);
+}
+
+// Populate rekening dropdowns in ATM modal
+function populateATMRekeningSelect() {
+  ['atm-rekening','atm-struk-rekening'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    store.rekening.forEach(r => {
+      sel.innerHTML += `<option value="${r.id}">${r.nama} (${r.bank}) — ${fmtRpShort(r.saldo)}</option>`;
+    });
+  });
+}
+
+// ATM tab switch
+function switchATMTab(tab) {
+  document.getElementById('tab-manual').style.display = tab==='manual'?'block':'none';
+  document.getElementById('tab-struk').style.display = tab==='struk'?'block':'none';
+  const mb = document.getElementById('tab-manual-btn');
+  const sb = document.getElementById('tab-struk-btn');
+  if (mb) { mb.style.background = tab==='manual'?'var(--orange)':'transparent'; mb.style.color = tab==='manual'?'#fff':'#888'; }
+  if (sb) { sb.style.background = tab==='struk'?'var(--orange)':'transparent'; sb.style.color = tab==='struk'?'#fff':'#888'; }
+}
+
+// Update biaya transfer display
+function updateATMBiaya() {
+  const jenis = document.getElementById('atm-jenis')?.value;
+  const biaya = BIAYA_TRANSFER[jenis] || 0;
+  const row = document.getElementById('atm-biaya-row');
+  if (row) row.style.display = biaya > 0 ? 'block' : 'none';
+  document.getElementById('atm-biaya-label').textContent = fmtRp(biaya);
+  updateATMTotal();
+}
+
+function updateATMTotal() {
+  const jenis = document.getElementById('atm-jenis')?.value;
+  const nominal = getRawNum('atm-nominal');
+  const biaya = BIAYA_TRANSFER[jenis] || 0;
+  const biayaEl = document.getElementById('atm-biaya-label');
+  const totalEl = document.getElementById('atm-total-label');
+  if (biayaEl) biayaEl.textContent = fmtRp(biaya);
+  if (totalEl) totalEl.textContent = fmtRp(nominal + biaya);
+}
+
+// Handle struk upload for ATM
+function handleATMStruk(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const src = ev.target.result;
+    const img = document.getElementById('atm-struk-img');
+    const preview = document.getElementById('atm-struk-preview');
+    const form = document.getElementById('atm-struk-form');
+    if (img) { img.src = src; }
+    if (preview) preview.style.display = 'block';
+    if (form) form.style.display = 'block';
+    // Set default date to today
+    document.getElementById('atm-struk-tgl').value = today();
+    showToast('Struk diupload! Periksa dan sesuaikan data.');
+  };
+  reader.readAsDataURL(f);
+}
+
+// Save ATM transaction
+function simpanTransaksiATM() {
+  const activeTab = document.getElementById('tab-manual').style.display !== 'none' ? 'manual' : 'struk';
+
+  let rekId, jenis, nominal, tgl, ket;
+
+  if (activeTab === 'manual') {
+    rekId = document.getElementById('atm-rekening').value;
+    jenis = document.getElementById('atm-jenis').value;
+    nominal = getRawNum('atm-nominal');
+    tgl = document.getElementById('atm-tgl').value || today();
+    ket = document.getElementById('atm-ket').value.trim() || jenis;
+  } else {
+    rekId = document.getElementById('atm-struk-rekening').value;
+    jenis = document.getElementById('atm-struk-jenis').value;
+    nominal = getRawNum('atm-struk-nominal');
+    tgl = document.getElementById('atm-struk-tgl').value || today();
+    ket = document.getElementById('atm-struk-ket').value.trim() || jenis;
+  }
+
+  if (!rekId || !nominal) return showToast('Rekening dan nominal wajib diisi!','red');
+
+  const rek = store.rekening.find(r=>r.id==rekId);
+  if (!rek) return showToast('Rekening tidak ditemukan!','red');
+
+  const biaya = BIAYA_TRANSFER[jenis] || 0;
+  const isDebit = jenis !== 'Setor Tunai'; // Setor = kredit, lainnya = debit
+  const totalPotong = isDebit ? nominal + biaya : 0;
+  const totalMasuk = !isDebit ? nominal : 0;
+
+  // Validasi saldo cukup
+  if (isDebit && rek.saldo < totalPotong) {
+    return showToast(`Saldo tidak cukup! Saldo: ${fmtRpShort(rek.saldo)}`, 'red');
+  }
+
+  // Update saldo rekening
+  const saldoBefore = rek.saldo;
+  if (isDebit) {
+    rek.saldo -= totalPotong;
+  } else {
+    rek.saldo += totalMasuk;
+  }
+
+  // Catat ke Data Transaksi
+  const jenisTransaksi = isDebit ? 'Pengeluaran' : 'Pemasukan';
+  store.transaksi.push({
+    id: store.nextId.tr++,
+    tgl, jam: new Date().toTimeString().slice(0,8),
+    kat: isDebit ? 'Pengeluaran' : 'Pemasukan',
+    ket: `[${rek.bank}] ${ket}`,
+    jenis: jenisTransaksi,
+    nominal: nominal,
+    struk: null,
+    rekeningId: rek.id,
+  });
+
+  // Catat biaya transfer sebagai pengeluaran terpisah
+  if (biaya > 0) {
+    store.transaksi.push({
+      id: store.nextId.tr++,
+      tgl, jam: new Date().toTimeString().slice(0,8),
+      kat: 'Biaya Transfer',
+      ket: `Biaya ${jenis} - ${rek.bank}`,
+      jenis: 'Pengeluaran',
+      nominal: biaya,
+      struk: null,
+      rekeningId: rek.id,
+    });
+  }
+
+  // Catat mutasi
+  if (!store.mutasi) store.mutasi = [];
+  store.mutasi.push({
+    id: Date.now(),
+    tgl, rekId: rek.id, rekNama: rek.nama,
+    ket: `${jenis}${ket?' - '+ket:''}`,
+    jenis: isDebit ? 'Debit' : 'Kredit',
+    nominal: nominal + biaya,
+    saldoSesudah: rek.saldo,
+  });
+
+  saveStore();
+  closeModal('modalTransferATM');
+  renderRekening();
+  renderTransaksi();
+
+  const msg = isDebit
+    ? `✅ ${fmtRpShort(nominal)} dipotong dari ${rek.nama}. Sisa: ${fmtRpShort(rek.saldo)}`
+    : `✅ ${fmtRpShort(nominal)} masuk ke ${rek.nama}. Saldo: ${fmtRpShort(rek.saldo)}`;
+  showToast(msg);
 }
 
 // ===========================
@@ -3245,8 +3748,8 @@ function renderTarget() {
 function saveTarget() {
   const nama = document.getElementById('tg-nama').value.trim();
   const icon = document.getElementById('tg-icon').value;
-  const target = parseFloat(document.getElementById('tg-target').value)||0;
-  const tercapai = parseFloat(document.getElementById('tg-tercapai').value)||0;
+  const target = getRawNum('tg-target');
+  const tercapai = getRawNum('tg-tercapai');
   const editId = document.getElementById('tg-edit-id').value;
   
   if (!nama||!target) return showToast('Nama dan Target wajib diisi!','red');
@@ -3269,8 +3772,8 @@ function editTarget(id) {
   document.getElementById('tg-edit-id').value = id;
   document.getElementById('tg-nama').value = t.nama;
   document.getElementById('tg-icon').value = t.icon;
-  document.getElementById('tg-target').value = t.target;
-  document.getElementById('tg-tercapai').value = t.tercapai;
+  setFmtInput('tg-target', t.target);
+  setFmtInput('tg-tercapai', t.tercapai);
   openModal('modalTarget','Edit Target Tabungan');
 }
 
@@ -3278,7 +3781,7 @@ function updateTercapai(id) {
   const t = store.target.find(t=>t.id===id);
   const val = prompt(`Update tabungan "${t.nama}" (saat ini: ${fmtRpShort(t.tercapai)})\nMasukkan jumlah baru:`);
   if (val !== null && !isNaN(parseFloat(val))) {
-    t.tercapai = parseFloat(val);
+    t.tercapai = parseFloat(val.replace(/[^0-9]/g,'')) || parseFloat(val) || 0;
     saveStore();
     renderTarget();
     showToast('Target diupdate!');
@@ -3326,10 +3829,21 @@ function openModal(id, title) {
       sel.innerHTML += `<option value="${k.nama}">${k.nama}</option>`;
     });
   }
+  // Populate rekening in ATM modal
+  if (id === 'modalTransferATM') {
+    populateATMRekeningSelect();
+    document.getElementById('atm-tgl').value = today();
+    switchATMTab('manual');
+    updateATMBiaya();
+  }
 }
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('show');
+  // Clear formatted money inputs inside this modal
+  document.querySelectorAll('#'+id+' input[inputmode="numeric"]').forEach(el => {
+    // Only clear if not editing (hidden id is empty)
+  });
   // Clear struk label
   const struk = document.getElementById('struk-label');
   if (struk) { struk.textContent = '📎 Klik untuk upload struk (gambar/PDF)'; struk.style.color = ''; }
