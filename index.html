@@ -1368,17 +1368,26 @@ table tbody tr:hover { background: #fafafa; }
             <button class="filter-btn" onclick="setCardFilter(2,'tahun',this)">Per Tahun</button>
           </div>
         </div>
-        <!-- Filter Tahun Dashboard -->
-        <div class="summary-card" style="background:var(--black-card);cursor:default;">
-          <div class="card-icon" style="opacity:.6;">🗓️</div>
-          <div class="card-label" style="opacity:.7;margin-bottom:10px;">Filter Tahun</div>
-          <select id="dash-year-select" onchange="setDashYearFilter(this.value?parseInt(this.value):null)"
-            style="width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
-                   color:#fff;border-radius:6px;padding:8px 10px;font-size:14px;font-weight:700;
-                   font-family:var(--font-main);cursor:pointer;outline:none;margin-bottom:6px;">
-            <option value="" style="background:#1a1a2e;color:#fff;">Semua Tahun</option>
-          </select>
-          <div id="year-active-label" style="font-size:10px;opacity:.5;text-align:center;">Semua data ditampilkan</div>
+        <!-- Total Saldo Semua Dompet -->
+        <div class="summary-card" style="background:var(--black-card);cursor:pointer;" onclick="navigateTo('dompet')">
+          <div class="card-icon" style="opacity:.5;font-size:28px;">💰</div>
+          <div class="card-label" style="opacity:.65;margin-bottom:8px;font-size:11px;letter-spacing:.5px;">TOTAL SALDO SAAT INI</div>
+          <div id="dash-total-saldo" style="font-size:22px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#fff;letter-spacing:.5px;margin-bottom:10px;">Rp. 0</div>
+          <div style="border-top:1px solid rgba(255,255,255,.12);padding-top:8px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+              <span style="font-size:10px;color:rgba(255,255,255,.55);">💵 Cash / Tunai</span>
+              <span id="dash-saldo-tunai" style="font-size:11px;font-weight:700;color:#7dcea0;">Rp. 0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+              <span style="font-size:10px;color:rgba(255,255,255,.55);">📱 E-Wallet</span>
+              <span id="dash-saldo-ewallet" style="font-size:11px;font-weight:700;color:#a29bfe;">Rp. 0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:10px;color:rgba(255,255,255,.55);">🏦 Rekening Bank</span>
+              <span id="dash-saldo-bank" style="font-size:11px;font-weight:700;color:#74b9ff;">Rp. 0</span>
+            </div>
+          </div>
+          <div style="margin-top:6px;font-size:9px;opacity:.35;text-align:center;">Klik untuk lihat detail →</div>
         </div>
         <!-- Pengeluaran Hari Ini -->
         <div class="summary-card" style="background:var(--red)">
@@ -1416,34 +1425,43 @@ table tbody tr:hover { background: #fafafa; }
             <button class="filter-btn" onclick="setCardFilter(6,'tahun',this)">Per Tahun</button>
           </div>
         </div>
-        <!-- Ringkasan Tahun Terpilih -->
+        <!-- Ringkasan + Filter Tahun -->
         <div class="summary-card" style="background:var(--black-card);cursor:default;">
-          <div class="card-icon" style="opacity:.6;">📊</div>
-          <div class="card-label" id="year-summary-title" style="opacity:.7;margin-bottom:8px;">Ringkasan Tahun Ini</div>
+          <!-- Filter tahun compact di atas -->
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <span style="font-size:10px;opacity:.5;white-space:nowrap;">📅 Tahun:</span>
+            <select id="dash-year-select" onchange="setDashYearFilter(this.value?parseInt(this.value):null)"
+              style="flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+                     color:#fff;border-radius:5px;padding:5px 8px;font-size:12px;font-weight:700;
+                     font-family:var(--font-main);cursor:pointer;outline:none;">
+              <option value="" style="background:#1a1a2e;color:#fff;">Semua</option>
+            </select>
+          </div>
+          <div class="card-label" id="year-summary-title" style="opacity:.65;margin-bottom:6px;font-size:11px;letter-spacing:.5px;">RINGKASAN TAHUN INI</div>
           <div style="margin-bottom:5px;">
-            <div style="font-size:10px;opacity:.55;margin-bottom:2px;">TOTAL PEMASUKAN</div>
+            <div style="font-size:9px;opacity:.5;margin-bottom:1px;">PEMASUKAN</div>
             <div id="year-sum-masuk" style="font-size:16px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#7dcea0;letter-spacing:.5px;">Rp. 0</div>
           </div>
-          <div style="margin-bottom:8px;">
-            <div style="font-size:10px;opacity:.55;margin-bottom:2px;">TOTAL PENGELUARAN</div>
+          <div style="margin-bottom:7px;">
+            <div style="font-size:9px;opacity:.5;margin-bottom:1px;">PENGELUARAN</div>
             <div id="year-sum-keluar" style="font-size:16px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#f1948a;letter-spacing:.5px;">Rp. 0</div>
           </div>
-          <!-- Garis pemisah -->
-          <div style="border-top:1px solid rgba(255,255,255,.15);padding-top:7px;">
-            <div style="font-size:10px;opacity:.55;margin-bottom:4px;">📦 KESELURUHAN (SEMUA TAHUN)</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-              <span style="font-size:10px;color:#7dcea0;opacity:.8;">Pemasukan</span>
-              <span id="all-sum-masuk" style="font-size:12px;font-weight:700;color:#7dcea0;">Rp. 0</span>
+          <div style="border-top:1px solid rgba(255,255,255,.12);padding-top:6px;">
+            <div style="font-size:9px;opacity:.5;margin-bottom:4px;">KESELURUHAN SEMUA TAHUN</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+              <span style="font-size:10px;color:#7dcea0;">Pemasukan</span>
+              <span id="all-sum-masuk" style="font-size:11px;font-weight:700;color:#7dcea0;">Rp. 0</span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-              <span style="font-size:10px;color:#f1948a;opacity:.8;">Pengeluaran</span>
-              <span id="all-sum-keluar" style="font-size:12px;font-weight:700;color:#f1948a;">Rp. 0</span>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+              <span style="font-size:10px;color:#f1948a;">Pengeluaran</span>
+              <span id="all-sum-keluar" style="font-size:11px;font-weight:700;color:#f1948a;">Rp. 0</span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.1);padding-top:3px;margin-top:2px;">
-              <span style="font-size:10px;opacity:.6;">Selisih</span>
-              <span id="all-sum-selisih" style="font-size:12px;font-weight:700;">Rp. 0</span>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.08);padding-top:3px;margin-top:2px;">
+              <span style="font-size:10px;opacity:.55;">Selisih</span>
+              <span id="all-sum-selisih" style="font-size:11px;font-weight:700;">Rp. 0</span>
             </div>
           </div>
+          <div id="year-active-label" style="display:none;"></div>
           <div id="card-masuk-all" style="display:none;"></div>
           <div id="card-keluar-all" style="display:none;"></div>
         </div>
@@ -1482,11 +1500,8 @@ table tbody tr:hover { background: #fafafa; }
               <div class="cs-total" style="color:var(--gold-dark)" id="cs-tabung-total">Rp. 0 ,-</div>
             </div>
           </div>
-          <!-- Dompet quick summary -->
-          <div style="margin-top:12px;padding:10px 14px;background:#f8f9fa;border-radius:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-            <span style="font-size:12px;color:#888;font-weight:600;">👛 Total Semua Dompet & Rekening</span>
-            <span id="dash-dom-total" style="font-size:16px;font-weight:700;color:var(--blue);font-family:'Bebas Neue',sans-serif;cursor:pointer;" onclick="navigateTo('dompet')">Rp. 0</span>
-          </div>
+          <!-- hidden compat element -->
+          <span id="dash-dom-total" style="display:none;"></span>
         </div>
         <div class="calendar-card">
           <div class="cal-header">
@@ -1690,10 +1705,15 @@ table tbody tr:hover { background: #fafafa; }
         <div class="table-wrap">
           <table>
             <thead><tr>
+              <th><input type="checkbox" id="dom-mutasi-check-all" onchange="toggleAllDomMutasi(this)" style="width:16px;height:16px;cursor:pointer;"></th>
               <th>Tgl</th><th>Dompet</th><th>Keterangan</th><th>Jenis</th><th>Nominal</th><th>Saldo Sesudah</th>
             </tr></thead>
             <tbody id="tbody-dom-mutasi"></tbody>
           </table>
+        </div>
+        <div style="padding:10px 14px;border-top:1px solid #f0f0f0;display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="hapusDomMutasiTerpilih()" class="btn btn-sm btn-danger">🗑️ Hapus Terpilih</button>
+          <button onclick="hapusSemuaDomMutasi()" class="btn btn-sm" style="background:#eee;color:#555;">🗑️ Hapus Semua</button>
         </div>
       </div>
     </div>
@@ -3593,12 +3613,20 @@ function updateCards() {
   // Yearly filter cards
   renderYearFilterCards();
 
-  // Total dompet
+  // Total saldo kartu hitam kiri
+  const allDomCards = getAllDompet();
+  const totalAll = allDomCards.reduce((s,d)=>s+d.saldo,0);
+  const totalTunai = allDomCards.filter(d=>d.tipe==='tunai').reduce((s,d)=>s+d.saldo,0);
+  const totalEwallet = allDomCards.filter(d=>d.tipe==='digital').reduce((s,d)=>s+d.saldo,0);
+  const totalBank = allDomCards.filter(d=>d.tipe==='bank').reduce((s,d)=>s+d.saldo,0);
+  const setS = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=fmtRpShort(v); };
+  setS('dash-total-saldo', totalAll);
+  setS('dash-saldo-tunai', totalTunai);
+  setS('dash-saldo-ewallet', totalEwallet);
+  setS('dash-saldo-bank', totalBank);
+  // Keep old dash-dom-total for compatibility
   const domTotalEl = document.getElementById('dash-dom-total');
-  if (domTotalEl) {
-    const total = getAllDompet().reduce((s,d)=>s+d.saldo,0);
-    domTotalEl.textContent = fmtRpShort(total);
-  }
+  if (domTotalEl) domTotalEl.textContent = fmtRpShort(totalAll);
 }
 
 function setCardFilter(cardIndex, periode, btn) {
@@ -4903,9 +4931,14 @@ function renderDompetMutasi() {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px;">Belum ada mutasi dompet</td></tr>';
     return;
   }
+  // Reset select-all checkbox
+  const allCheck = document.getElementById('dom-mutasi-check-all');
+  if (allCheck) allCheck.checked = false;
+
   data.forEach(m => {
     const isDebit = m.jenis === 'Debit';
     tbody.innerHTML += `<tr>
+      <td><input type="checkbox" class="dom-mutasi-check" data-id="${m.id}" style="width:16px;height:16px;cursor:pointer;"></td>
       <td style="font-size:11px">${fmtDate(m.tgl)}</td>
       <td><strong>${m.domNama||m.rekNama||'-'}</strong></td>
       <td>${m.ket}</td>
@@ -4926,6 +4959,35 @@ function setDomWarna(color) {
   if (w) w.value = color;
 }
 function updateDomWarnaPreview() {} // placeholder
+
+function toggleAllDomMutasi(el) {
+  document.querySelectorAll('.dom-mutasi-check').forEach(c => c.checked = el.checked);
+}
+
+function hapusDomMutasiTerpilih() {
+  const checked = document.querySelectorAll('.dom-mutasi-check:checked');
+  if (checked.length === 0) return showToast('Pilih mutasi yang ingin dihapus!','red');
+  if (!confirm(`Hapus ${checked.length} mutasi dompet terpilih?`)) return;
+  const ids = [...checked].map(c => Number(c.getAttribute('data-id')));
+  store.mutasi = (store.mutasi||[]).filter(m => !ids.includes(m.id));
+  saveStore();
+  renderDompet();
+  showToast(`${ids.length} mutasi dihapus!`,'red');
+}
+
+function hapusSemuaDomMutasi() {
+  const filterDomId = document.getElementById('filter-dom-mutasi')?.value;
+  if (filterDomId) {
+    if (!confirm('Hapus semua mutasi dompet ini?')) return;
+    store.mutasi = (store.mutasi||[]).filter(m => String(m.domId) !== String(filterDomId));
+  } else {
+    if (!confirm('Hapus SEMUA riwayat mutasi dompet? Tidak bisa dibatalkan!')) return;
+    store.mutasi = (store.mutasi||[]).filter(m => m.rekId); // keep rekening mutasi
+  }
+  saveStore();
+  renderDompet();
+  showToast('Mutasi dihapus!','red');
+}
 
 function saveDompet() {
   const nama = document.getElementById('dom-nama').value.trim();
