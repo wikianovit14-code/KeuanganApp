@@ -2279,7 +2279,7 @@ table tbody tr:hover { background: #fafafa; }
 
 <!-- Modal Bayar Cicilan -->
 <div class="modal-overlay" id="modalBayarCicilan">
-  <div class="modal" style="width:480px">
+  <div class="modal" style="width:500px">
     <div class="modal-header" style="background:var(--green)">
       <h3>💳 Bayar Cicilan</h3>
       <button class="modal-close" onclick="closeModal('modalBayarCicilan')">✕</button>
@@ -2287,29 +2287,82 @@ table tbody tr:hover { background: #fafafa; }
     <div class="modal-body">
       <input type="hidden" id="bc-hutang-id">
       <div id="bc-info" style="background:#f0fff4;border-radius:6px;padding:12px;margin-bottom:14px;font-size:13px;"></div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Jumlah Bayar (Rp) *</label>
-          <input type="text" id="bc-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
-        </div>
-        <div class="form-group">
-          <label>Tanggal Bayar</label>
-          <input type="date" id="bc-tgl">
-        </div>
+
+      <!-- Mode bayar: 1 cicilan atau beberapa sekaligus -->
+      <div style="display:flex;background:#f0f2f5;border-radius:6px;padding:3px;margin-bottom:14px;">
+        <button id="bc-mode-satu-btn" onclick="setBayarMode('satu')"
+          style="flex:1;padding:7px;border:none;border-radius:4px;background:var(--green);color:#fff;
+                 font-family:var(--font-main);font-size:12px;font-weight:700;cursor:pointer;">
+          💳 Bayar 1 Cicilan
+        </button>
+        <button id="bc-mode-multi-btn" onclick="setBayarMode('multi')"
+          style="flex:1;padding:7px;border:none;border-radius:4px;background:transparent;color:#888;
+                 font-family:var(--font-main);font-size:12px;cursor:pointer;">
+          📦 Bayar Beberapa Sekaligus
+        </button>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Bayar dari Rekening</label>
-          <select id="bc-rekening">
-            <option value="">-- Bayar Manual (tidak dari rekening) --</option>
-          </select>
+      <input type="hidden" id="bc-mode" value="satu">
+
+      <!-- Mode: 1 cicilan -->
+      <div id="bc-satu-fields">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Jumlah Bayar (Rp) *</label>
+            <input type="text" id="bc-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+          </div>
+          <div class="form-group">
+            <label>Tanggal Bayar</label>
+            <input type="date" id="bc-tgl">
+          </div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:12px;">
           <label>Keterangan</label>
           <input type="text" id="bc-ket" placeholder="Misal: Cicilan ke-3 bulan Maret...">
         </div>
+      </div>
+
+      <!-- Mode: beberapa cicilan -->
+      <div id="bc-multi-fields" style="display:none;">
+        <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px;margin-bottom:12px;font-size:12px;color:#e65100;">
+          ⚠️ Gunakan ini untuk mencatat cicilan lama yang belum diinput (misal: sudah bayar 19 bulan lalu)
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Jumlah Cicilan *</label>
+            <input type="number" id="bc-jumlah-cicilan" placeholder="19" min="1" oninput="hitungMultiCicilan()">
+          </div>
+          <div class="form-group">
+            <label>Nominal per Cicilan (Rp)</label>
+            <input type="text" id="bc-nominal-per" placeholder="0" inputmode="numeric" oninput="fmtInput(this);hitungMultiCicilan()">
+          </div>
+        </div>
+        <div id="bc-multi-preview" style="display:none;background:#f0fff4;border-radius:6px;padding:10px;margin-bottom:10px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span>Total yang akan dicatat:</span>
+            <strong id="bc-multi-total" style="color:var(--green)">Rp. 0</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;">
+            <span style="color:#888;font-size:12px;">Dicatat sebagai 1 transaksi historis</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Periode (Keterangan)</label>
+            <input type="text" id="bc-multi-ket" placeholder="Misal: Cicilan Agus 2024 - Feb 2026...">
+          </div>
+          <div class="form-group">
+            <label>Tanggal Input</label>
+            <input type="date" id="bc-multi-tgl">
+          </div>
+        </div>
+      </div>
+
+      <!-- Sumber dana (untuk keduanya) -->
+      <div class="form-group">
+        <label>Bayar dari Dompet / Rekening</label>
+        <select id="bc-rekening">
+          <option value="">-- Bayar Manual / Tidak potong saldo --</option>
+        </select>
       </div>
     </div>
     <div class="modal-footer">
@@ -4670,20 +4723,129 @@ function bukaBayarCicilan(id) {
   }
 
   document.getElementById('bc-ket').value = h.tipeHutang==='cicilan' ? `Cicilan ke-${kali+1} — ${h.ket}` : `Pembayaran ${h.ket}`;
+
+  // Reset to single mode
+  setBayarMode('satu');
+
+  // Pre-fill multi mode defaults
+  const nomPerCicilan = h.cicilanPerBulan || 0;
+  if (document.getElementById('bc-nominal-per')) setFmtInput('bc-nominal-per', nomPerCicilan);
+  if (document.getElementById('bc-multi-tgl')) document.getElementById('bc-multi-tgl').value = today();
+  if (document.getElementById('bc-multi-ket')) {
+    document.getElementById('bc-multi-ket').value = kali === 0 && h.tipeHutang==='cicilan'
+      ? `Historis ${h.ket} (cicilan yg sudah dibayar sebelumnya)`
+      : `Cicilan ${h.ket}`;
+  }
+
   openModal('modalBayarCicilan','💳 Bayar Cicilan');
+}
+
+function setBayarMode(mode) {
+  document.getElementById('bc-mode').value = mode;
+  const isSatu = mode === 'satu';
+  document.getElementById('bc-satu-fields').style.display = isSatu ? 'block' : 'none';
+  document.getElementById('bc-multi-fields').style.display = isSatu ? 'none' : 'block';
+  const sb = document.getElementById('bc-mode-satu-btn');
+  const mb = document.getElementById('bc-mode-multi-btn');
+  if (sb) { sb.style.background = isSatu?'var(--green)':'transparent'; sb.style.color = isSatu?'#fff':'#888'; }
+  if (mb) { mb.style.background = isSatu?'transparent':'var(--green)'; mb.style.color = isSatu?'#888':'#fff'; }
+}
+
+function hitungMultiCicilan() {
+  const jumlah = parseInt(document.getElementById('bc-jumlah-cicilan')?.value)||0;
+  const perCicilan = getRawNum('bc-nominal-per');
+  const preview = document.getElementById('bc-multi-preview');
+  const totalEl = document.getElementById('bc-multi-total');
+  if (jumlah > 0 && perCicilan > 0) {
+    const total = jumlah * perCicilan;
+    if (totalEl) totalEl.textContent = fmtRp(total);
+    if (preview) preview.style.display = 'block';
+  } else {
+    if (preview) preview.style.display = 'none';
+  }
 }
 
 function prosessBayarCicilan() {
   const id = document.getElementById('bc-hutang-id').value;
+  const mode = document.getElementById('bc-mode')?.value || 'satu';
+  const rekId = document.getElementById('bc-rekening').value;
+  const h = store.hutang.find(h=>h.id==id);
+  if (!h) return;
+
+  // Multi mode: bayar beberapa cicilan sekaligus
+  if (mode === 'multi') {
+    const jumlah = parseInt(document.getElementById('bc-jumlah-cicilan')?.value)||0;
+    const perCicilan = getRawNum('bc-nominal-per');
+    const tgl = document.getElementById('bc-multi-tgl')?.value || today();
+    const ket = document.getElementById('bc-multi-ket')?.value.trim() || `Historis ${jumlah} cicilan ${h.ket}`;
+
+    if (!jumlah || !perCicilan) return showToast('Isi jumlah cicilan dan nominal per cicilan!','red');
+    const totalMulti = jumlah * perCicilan;
+
+    // Validate saldo if sumber selected
+    let sumberObjM = null, sumberNamaM = '';
+    if (rekId) {
+      if (rekId.startsWith('rek_')) {
+        sumberObjM = store.rekening.find(r=>r.id==rekId.replace('rek_',''));
+        sumberNamaM = sumberObjM ? `${sumberObjM.nama} (${sumberObjM.bank})` : '';
+      } else if (rekId.startsWith('dom_')) {
+        sumberObjM = store.dompet?.find(d=>d.id==parseInt(rekId.replace('dom_','')));
+        sumberNamaM = sumberObjM ? `${sumberObjM.icon} ${sumberObjM.nama}` : '';
+      }
+      if (sumberObjM && sumberObjM.saldo < totalMulti) {
+        return showToast(`Saldo tidak cukup untuk ${jumlah} cicilan! Total: ${fmtRpShort(totalMulti)}`, 'red');
+      }
+    }
+
+    // Update hutang - add entries for each cicilan
+    h.totalDibayar = (h.totalDibayar||0) + totalMulti;
+    h.cicilan = h.totalDibayar;
+    if (!h.riwayatCicilan) h.riwayatCicilan = [];
+    const startKe = h.riwayatCicilan.length + 1;
+    // Add all cicilans to riwayat
+    for (let i = 0; i < jumlah; i++) {
+      h.riwayatCicilan.push({ ke: startKe+i, tgl, nominal: perCicilan, ket: `${ket} (ke-${startKe+i})`, rekId });
+    }
+
+    const sisaM = Math.max(0,(h.nominalTotal||h.nominal) - h.totalDibayar);
+    h.status = sisaM <= 0 ? 'Lunas' : 'Cicil';
+
+    // Catat 1 transaksi historis
+    store.transaksi.push({
+      id: store.nextId.tr++, tgl,
+      jam: '00:00:00',
+      kat: 'Cicilan', ket,
+      jenis: 'Pengeluaran', nominal: totalMulti,
+      struk: null, sumberId: rekId||null, sumberNama: sumberNamaM,
+    });
+
+    if (rekId && sumberObjM) {
+      sumberObjM.saldo -= totalMulti;
+      if (!store.mutasi) store.mutasi = [];
+      store.mutasi.push({
+        id: Date.now(), tgl,
+        domId: rekId.startsWith('dom_')?rekId:null,
+        rekId: rekId.startsWith('rek_')?sumberObjM.id:null,
+        domNama: sumberNamaM, rekNama: sumberNamaM,
+        ket, jenis:'Debit', nominal: totalMulti, saldoSesudah: sumberObjM.saldo,
+      });
+    }
+
+    saveStore();
+    closeModal('modalBayarCicilan');
+    renderHutang();
+    renderTransaksi();
+    const msg = sisaM <= 0 ? '🎉 LUNAS!' : `✅ ${jumlah} cicilan (${fmtRpShort(totalMulti)}) berhasil dicatat! Sisa: ${fmtRp(sisaM)}`;
+    showToast(msg);
+    return;
+  }
+
+  // Single mode (normal)
   const nominal = getRawNum('bc-nominal');
   const tgl = document.getElementById('bc-tgl').value || today();
-  const rekId = document.getElementById('bc-rekening').value;
   const ket = document.getElementById('bc-ket').value.trim();
 
   if (!nominal) return showToast('Nominal wajib diisi!','red');
-
-  const h = store.hutang.find(h=>h.id==id);
-  if (!h) return;
 
   // Resolve sumber dana (rekening or dompet)
   let sumberObj = null;
