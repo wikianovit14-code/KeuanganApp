@@ -4316,12 +4316,25 @@ function bukaBayarCicilan(id) {
     ${h.tenor?`<div style="margin-top:6px;font-size:12px;color:#888;">Cicilan ke-${kali+1} dari ${h.tenor} • Cicilan/bln: ${fmtRp(cicilanPerBulan)}</div>`:''}
   `;
 
-  // Populate rekening
+  // Populate semua sumber dana (rekening + dompet digital + tunai)
   const sel = document.getElementById('bc-rekening');
-  sel.innerHTML = '<option value="">-- Bayar Manual --</option>';
-  store.rekening.forEach(r => {
-    sel.innerHTML += `<option value="${r.id}">${r.nama} (${r.bank}) — ${fmtRpShort(r.saldo)}</option>`;
-  });
+  sel.innerHTML = '<option value="">-- Bayar Manual (catat saja) --</option>';
+  // Rekening bank
+  if (store.rekening && store.rekening.length > 0) {
+    sel.innerHTML += '<optgroup label="🏦 Rekening Bank">';
+    store.rekening.forEach(r => {
+      sel.innerHTML += `<option value="rek_${r.id}">${r.nama} (${r.bank}) — ${fmtRpShort(r.saldo)}</option>`;
+    });
+    sel.innerHTML += '</optgroup>';
+  }
+  // Dompet digital & tunai
+  if (store.dompet && store.dompet.length > 0) {
+    sel.innerHTML += '<optgroup label="👛 Dompet & E-Wallet">';
+    store.dompet.forEach(d => {
+      sel.innerHTML += `<option value="dom_${d.id}">${d.icon} ${d.nama} — ${fmtRpShort(d.saldo)}</option>`;
+    });
+    sel.innerHTML += '</optgroup>';
+  }
 
   document.getElementById('bc-ket').value = h.tipeHutang==='cicilan' ? `Cicilan ke-${kali+1} — ${h.ket}` : `Pembayaran ${h.ket}`;
   openModal('modalBayarCicilan','💳 Bayar Cicilan');
@@ -4339,11 +4352,22 @@ function prosessBayarCicilan() {
   const h = store.hutang.find(h=>h.id==id);
   if (!h) return;
 
-  // Validate rekening saldo
+  // Resolve sumber dana (rekening or dompet)
+  let sumberObj = null;
+  let sumberNama = '';
   if (rekId) {
-    const rek = store.rekening.find(r=>r.id==rekId);
-    if (rek && rek.saldo < nominal) {
-      return showToast(`Saldo ${rek.nama} tidak cukup! Saldo: ${fmtRpShort(rek.saldo)}`, 'red');
+    if (rekId.startsWith('rek_')) {
+      const rid = rekId.replace('rek_','');
+      sumberObj = store.rekening.find(r=>r.id==rid);
+      sumberNama = sumberObj ? `${sumberObj.nama} (${sumberObj.bank})` : '';
+    } else if (rekId.startsWith('dom_')) {
+      const did = parseInt(rekId.replace('dom_',''));
+      sumberObj = store.dompet && store.dompet.find(d=>d.id===did);
+      sumberNama = sumberObj ? `${sumberObj.icon} ${sumberObj.nama}` : '';
+    }
+    // Validate saldo
+    if (sumberObj && sumberObj.saldo < nominal) {
+      return showToast(`Saldo ${sumberNama} tidak cukup! Saldo: ${fmtRpShort(sumberObj.saldo)}`, 'red');
     }
   }
 
@@ -4369,19 +4393,29 @@ function prosessBayarCicilan() {
     jam: new Date().toTimeString().slice(0,8),
     kat: 'Cicilan', ket: ket || `Bayar cicilan ${h.ket}`,
     jenis: 'Pengeluaran', nominal,
-    struk: null, rekeningId: rekId||null,
+    struk: null,
+    sumberId: rekId||null,
+    sumberNama: sumberNama||'',
+    rekeningId: rekId||null,
   });
 
-  // Potong saldo rekening
-  if (rekId) {
-    const rek = store.rekening.find(r=>r.id==rekId);
-    if (rek) {
-      rek.saldo -= nominal;
-      if (!store.mutasi) store.mutasi = [];
+  // Potong saldo sumber dana
+  if (rekId && sumberObj) {
+    sumberObj.saldo -= nominal;
+    if (!store.mutasi) store.mutasi = [];
+    if (rekId.startsWith('rek_')) {
       store.mutasi.push({
-        id: Date.now(), tgl, rekId: rek.id, rekNama: rek.nama,
+        id: Date.now(), tgl,
+        rekId: sumberObj.id, rekNama: sumberNama,
         ket: ket||`Bayar cicilan ${h.ket}`, jenis:'Debit',
-        nominal, saldoSesudah: rek.saldo,
+        nominal, saldoSesudah: sumberObj.saldo,
+      });
+    } else {
+      store.mutasi.push({
+        id: Date.now(), tgl,
+        domId: rekId, domNama: sumberNama,
+        ket: ket||`Bayar cicilan ${h.ket}`, jenis:'Debit',
+        nominal, saldoSesudah: sumberObj.saldo,
       });
     }
   }
@@ -4391,6 +4425,7 @@ function prosessBayarCicilan() {
   renderHutang();
   renderTransaksi();
   if (document.getElementById('page-rekening').classList.contains('active')) renderRekening();
+  if (document.getElementById('page-dompet').classList.contains('active')) renderDompet();
   showToast(sisa > 0 ? `✅ Cicilan ke-${kali} berhasil! Sisa: ${fmtRp(sisa)}` : '🎉 Lunas!');
 }
 
