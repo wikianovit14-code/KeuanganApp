@@ -2123,6 +2123,7 @@ table tbody tr:hover { background: #fafafa; }
             <button class="btn btn-success" onclick="exportData()">📤 Export Backup (.json)</button>
             <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">📥 Import Backup</button>
             <button class="btn btn-warning" onclick="resetFirebaseConfig()">🔥 Ganti Config Firebase</button>
+            <button class="btn btn-primary" onclick="importKategoriDefault()">📚 Import 167 Kategori Lengkap</button>
             <button class="btn btn-danger" onclick="resetStore()">🗑️ Reset Semua Data</button>
           </div>
           <div style="margin-top:14px;padding:12px;background:#f8f9fa;border-radius:6px;font-size:12px;color:#555;line-height:1.8;">
@@ -3142,12 +3143,221 @@ table tbody tr:hover { background: #fafafa; }
 // ===========================
 const DEFAULT_DATA = {
   kategori: [
-    {id:1, nama:'Gaji', jenis:'Pemasukan', ket:'Pendapatan rutin', tgl:'2024-01-15'},
-    {id:2, nama:'Bonus', jenis:'Pemasukan', ket:'Pendapatan tambahan', tgl:'2024-01-15'},
-    {id:3, nama:'Makanan', jenis:'Pengeluaran', ket:'Kebutuhan makanan', tgl:'2024-01-15'},
-    {id:4, nama:'Transport', jenis:'Pengeluaran', ket:'Biaya transportasi', tgl:'2024-01-15'},
-    {id:5, nama:'Listrik', jenis:'Pengeluaran', ket:'Tagihan listrik', tgl:'2024-01-15'},
-    {id:6, nama:'Tabungan Darurat', jenis:'Tabungan', ket:'Dana darurat', tgl:'2024-01-15'},
+    // ===================== PEMASUKAN =====================
+    // A. Pendapatan Utama
+    {id:1,   icon:'💼', nama:'Gaji Pokok',             jenis:'Pemasukan',  ket:'Gaji bulanan tetap',           tgl:'2024-01-15'},
+    {id:2,   icon:'🔨', nama:'Upah Harian',             jenis:'Pemasukan',  ket:'Kerja harian',                 tgl:'2024-01-15'},
+    {id:3,   icon:'📋', nama:'Honor Proyek',             jenis:'Pemasukan',  ket:'Proyek tertentu',              tgl:'2024-01-15'},
+    {id:4,   icon:'💻', nama:'Freelance',                jenis:'Pemasukan',  ket:'Desain, coding, dll',          tgl:'2024-01-15'},
+    {id:5,   icon:'🏷️', nama:'Tunjangan',                jenis:'Pemasukan',  ket:'Jabatan, transport, makan',    tgl:'2024-01-15'},
+    // B. Pendapatan Tambahan
+    {id:6,   icon:'🎯', nama:'Bonus',                    jenis:'Pemasukan',  ket:'Bonus tahunan / performa',     tgl:'2024-01-15'},
+    {id:7,   icon:'⏰', nama:'Lembur',                   jenis:'Pemasukan',  ket:'Jam kerja tambahan',           tgl:'2024-01-15'},
+    {id:8,   icon:'🎁', nama:'THR',                      jenis:'Pemasukan',  ket:'Tunjangan Hari Raya',          tgl:'2024-01-15'},
+    {id:9,   icon:'🏆', nama:'Insentif',                 jenis:'Pemasukan',  ket:'Target kerja',                 tgl:'2024-01-15'},
+    // C. Bisnis & Usaha
+    {id:10,  icon:'🛒', nama:'Penjualan Produk',         jenis:'Pemasukan',  ket:'Online / Offline',             tgl:'2024-01-15'},
+    {id:11,  icon:'🔧', nama:'Jasa',                     jenis:'Pemasukan',  ket:'Service, konsultasi',          tgl:'2024-01-15'},
+    {id:12,  icon:'📈', nama:'Keuntungan Bersih',        jenis:'Pemasukan',  ket:'Profit usaha',                 tgl:'2024-01-15'},
+    {id:13,  icon:'📦', nama:'Dropship / Reseller',      jenis:'Pemasukan',  ket:'Jual barang reseller',         tgl:'2024-01-15'},
+    {id:14,  icon:'🏪', nama:'Franchise',                jenis:'Pemasukan',  ket:'Pendapatan franchise',         tgl:'2024-01-15'},
+    // D. Pasif Income
+    {id:15,  icon:'🏦', nama:'Bunga Bank',               jenis:'Pemasukan',  ket:'Bunga tabungan / deposito',    tgl:'2024-01-15'},
+    {id:16,  icon:'📊', nama:'Dividen Saham',            jenis:'Pemasukan',  ket:'Dividen investasi',            tgl:'2024-01-15'},
+    {id:17,  icon:'🏠', nama:'Sewa Properti',            jenis:'Pemasukan',  ket:'Pendapatan sewa rumah/kos',    tgl:'2024-01-15'},
+    {id:18,  icon:'🚗', nama:'Sewa Kendaraan',           jenis:'Pemasukan',  ket:'Sewa motor/mobil',             tgl:'2024-01-15'},
+    {id:19,  icon:'🎵', nama:'Royalti',                  jenis:'Pemasukan',  ket:'Musik, buku, dll',             tgl:'2024-01-15'},
+    // E. Investasi (Pencairan)
+    {id:20,  icon:'📉', nama:'Jual Saham',               jenis:'Pemasukan',  ket:'Pencairan saham',              tgl:'2024-01-15'},
+    {id:21,  icon:'🪙', nama:'Jual Crypto',              jenis:'Pemasukan',  ket:'Pencairan aset crypto',        tgl:'2024-01-15'},
+    {id:22,  icon:'🥇', nama:'Jual Emas',                jenis:'Pemasukan',  ket:'Pencairan investasi emas',     tgl:'2024-01-15'},
+    {id:23,  icon:'💹', nama:'Jual Reksa Dana',          jenis:'Pemasukan',  ket:'Pencairan reksa dana',         tgl:'2024-01-15'},
+    // F. Transfer Masuk
+    {id:24,  icon:'👥', nama:'Transfer dari Teman',      jenis:'Pemasukan',  ket:'Terima transfer teman',        tgl:'2024-01-15'},
+    {id:25,  icon:'👨‍👩‍👧', nama:'Transfer dari Keluarga', jenis:'Pemasukan',  ket:'Terima transfer keluarga',     tgl:'2024-01-15'},
+    {id:26,  icon:'↩️', nama:'Pengembalian Pinjaman',    jenis:'Pemasukan',  ket:'Uang pinjaman dikembalikan',   tgl:'2024-01-15'},
+    // G. Lain-lain
+    {id:27,  icon:'🎀', nama:'Hadiah',                   jenis:'Pemasukan',  ket:'Hadiah uang tunai',            tgl:'2024-01-15'},
+    {id:28,  icon:'🤝', nama:'Hibah',                    jenis:'Pemasukan',  ket:'Bantuan/hibah',                tgl:'2024-01-15'},
+    {id:29,  icon:'💳', nama:'Cashback',                 jenis:'Pemasukan',  ket:'Cashback belanja',             tgl:'2024-01-15'},
+    {id:30,  icon:'🔄', nama:'Refund',                   jenis:'Pemasukan',  ket:'Pengembalian uang',            tgl:'2024-01-15'},
+    {id:31,  icon:'🛡️', nama:'Klaim Asuransi',           jenis:'Pemasukan',  ket:'Klaim asuransi jiwa/kesehatan',tgl:'2024-01-15'},
+
+    // ===================== PENGELUARAN =====================
+    // A. Kebutuhan Pokok
+    {id:32,  icon:'🍚', nama:'Makanan Harian',           jenis:'Pengeluaran', ket:'Makan sehari-hari',           tgl:'2024-01-15'},
+    {id:33,  icon:'🥤', nama:'Minuman',                  jenis:'Pengeluaran', ket:'Minuman harian',              tgl:'2024-01-15'},
+    {id:34,  icon:'🛒', nama:'Belanja Bulanan',          jenis:'Pengeluaran', ket:'Sembako dan kebutuhan pokok', tgl:'2024-01-15'},
+    {id:35,  icon:'💧', nama:'Air (PDAM)',               jenis:'Pengeluaran', ket:'Tagihan air bulanan',         tgl:'2024-01-15'},
+    {id:36,  icon:'⚡', nama:'Listrik',                  jenis:'Pengeluaran', ket:'Tagihan listrik PLN',         tgl:'2024-01-15'},
+    {id:37,  icon:'🔥', nama:'Gas LPG',                  jenis:'Pengeluaran', ket:'Beli gas memasak',            tgl:'2024-01-15'},
+    // B. Tempat Tinggal
+    {id:38,  icon:'🏠', nama:'Sewa Rumah / Kos',         jenis:'Pengeluaran', ket:'Bayar sewa bulanan',          tgl:'2024-01-15'},
+    {id:39,  icon:'🏡', nama:'Cicilan Rumah (KPR)',      jenis:'Pengeluaran', ket:'Angsuran KPR',                tgl:'2024-01-15'},
+    {id:40,  icon:'🔨', nama:'Renovasi',                 jenis:'Pengeluaran', ket:'Perbaikan/renovasi rumah',    tgl:'2024-01-15'},
+    {id:41,  icon:'🛋️', nama:'Perabot Rumah',            jenis:'Pengeluaran', ket:'Furniture dan perabotan',     tgl:'2024-01-15'},
+    {id:42,  icon:'🧹', nama:'Perawatan Rumah',          jenis:'Pengeluaran', ket:'Bersih-bersih, tukang, dll',  tgl:'2024-01-15'},
+    // C. Transportasi
+    {id:43,  icon:'⛽', nama:'BBM',                      jenis:'Pengeluaran', ket:'Bensin motor/mobil',          tgl:'2024-01-15'},
+    {id:44,  icon:'🛵', nama:'Ojol / Taksi',             jenis:'Pengeluaran', ket:'Gojek, Grab, dll',            tgl:'2024-01-15'},
+    {id:45,  icon:'🚌', nama:'Angkutan Umum',            jenis:'Pengeluaran', ket:'Bus, angkot, KRL, MRT',       tgl:'2024-01-15'},
+    {id:46,  icon:'🅿️', nama:'Parkir',                   jenis:'Pengeluaran', ket:'Biaya parkir',                tgl:'2024-01-15'},
+    {id:47,  icon:'🛣️', nama:'Tol',                      jenis:'Pengeluaran', ket:'Bayar tol',                   tgl:'2024-01-15'},
+    {id:48,  icon:'🔧', nama:'Servis Kendaraan',         jenis:'Pengeluaran', ket:'Servis rutin motor/mobil',    tgl:'2024-01-15'},
+    {id:49,  icon:'📋', nama:'Pajak Kendaraan',          jenis:'Pengeluaran', ket:'STNK tahunan',                tgl:'2024-01-15'},
+    {id:50,  icon:'🛡️', nama:'Asuransi Kendaraan',       jenis:'Pengeluaran', ket:'Premi asuransi kendaraan',    tgl:'2024-01-15'},
+    // D. Keuangan & Kewajiban
+    {id:51,  icon:'🏍️', nama:'Cicilan Motor',            jenis:'Pengeluaran', ket:'Angsuran kredit motor',       tgl:'2024-01-15'},
+    {id:52,  icon:'🚘', nama:'Cicilan Mobil',            jenis:'Pengeluaran', ket:'Angsuran kredit mobil',       tgl:'2024-01-15'},
+    {id:53,  icon:'📱', nama:'Cicilan HP',               jenis:'Pengeluaran', ket:'Angsuran kredit HP',          tgl:'2024-01-15'},
+    {id:54,  icon:'💻', nama:'Cicilan Elektronik',       jenis:'Pengeluaran', ket:'Angsuran barang elektronik',  tgl:'2024-01-15'},
+    {id:55,  icon:'🤝', nama:'Hutang Pribadi',           jenis:'Pengeluaran', ket:'Bayar hutang teman/keluarga', tgl:'2024-01-15'},
+    {id:56,  icon:'💳', nama:'Kartu Kredit',             jenis:'Pengeluaran', ket:'Tagihan kartu kredit',        tgl:'2024-01-15'},
+    {id:57,  icon:'🏦', nama:'Biaya Admin Bank',         jenis:'Pengeluaran', ket:'Potongan admin bulanan',      tgl:'2024-01-15'},
+    {id:58,  icon:'↗️', nama:'Biaya Transfer',           jenis:'Pengeluaran', ket:'Biaya kirim uang',            tgl:'2024-01-15'},
+    {id:59,  icon:'⚠️', nama:'Denda',                   jenis:'Pengeluaran', ket:'Denda keterlambatan',         tgl:'2024-01-15'},
+    // E. Kesehatan
+    {id:60,  icon:'💊', nama:'Obat-obatan',              jenis:'Pengeluaran', ket:'Beli obat apotek',            tgl:'2024-01-15'},
+    {id:61,  icon:'🏥', nama:'Klinik',                   jenis:'Pengeluaran', ket:'Berobat ke klinik',           tgl:'2024-01-15'},
+    {id:62,  icon:'🏨', nama:'Rumah Sakit',              jenis:'Pengeluaran', ket:'Rawat inap/jalan RS',         tgl:'2024-01-15'},
+    {id:63,  icon:'🩺', nama:'Checkup',                  jenis:'Pengeluaran', ket:'Medical checkup rutin',       tgl:'2024-01-15'},
+    {id:64,  icon:'💚', nama:'BPJS',                     jenis:'Pengeluaran', ket:'Iuran BPJS kesehatan',        tgl:'2024-01-15'},
+    {id:65,  icon:'🛡️', nama:'Asuransi Kesehatan',       jenis:'Pengeluaran', ket:'Premi asuransi jiwa/kesehatan',tgl:'2024-01-15'},
+    // F. Pendidikan
+    {id:66,  icon:'🎓', nama:'Sekolah / Kuliah',         jenis:'Pengeluaran', ket:'SPP, UKT, biaya sekolah',     tgl:'2024-01-15'},
+    {id:67,  icon:'📱', nama:'Kursus Online',            jenis:'Pengeluaran', ket:'Udemy, Coursera, dll',        tgl:'2024-01-15'},
+    {id:68,  icon:'🏫', nama:'Pelatihan',                jenis:'Pengeluaran', ket:'Workshop, seminar',           tgl:'2024-01-15'},
+    {id:69,  icon:'📚', nama:'Buku',                     jenis:'Pengeluaran', ket:'Beli buku',                   tgl:'2024-01-15'},
+    {id:70,  icon:'🏅', nama:'Sertifikasi',              jenis:'Pengeluaran', ket:'Biaya sertifikasi profesi',   tgl:'2024-01-15'},
+    // G. Gaya Hidup
+    {id:71,  icon:'☕', nama:'Nongkrong / Cafe',         jenis:'Pengeluaran', ket:'Kopi, nongkrong',             tgl:'2024-01-15'},
+    {id:72,  icon:'🍽️', nama:'Makan di Luar',           jenis:'Pengeluaran', ket:'Restoran, warteg, dll',       tgl:'2024-01-15'},
+    {id:73,  icon:'🎬', nama:'Hiburan',                  jenis:'Pengeluaran', ket:'Bioskop, game, konser',       tgl:'2024-01-15'},
+    {id:74,  icon:'📺', nama:'Streaming',                jenis:'Pengeluaran', ket:'Netflix, Spotify, Disney+',   tgl:'2024-01-15'},
+    {id:75,  icon:'🎮', nama:'Hobi',                     jenis:'Pengeluaran', ket:'Fotografi, gaming, dll',      tgl:'2024-01-15'},
+    // H. Belanja Pribadi
+    {id:76,  icon:'👕', nama:'Pakaian',                  jenis:'Pengeluaran', ket:'Baju, celana, beli pakaian',  tgl:'2024-01-15'},
+    {id:77,  icon:'👟', nama:'Sepatu',                   jenis:'Pengeluaran', ket:'Beli sepatu/sandal',          tgl:'2024-01-15'},
+    {id:78,  icon:'💍', nama:'Aksesoris',                jenis:'Pengeluaran', ket:'Jam, tas, perhiasan, dll',    tgl:'2024-01-15'},
+    {id:79,  icon:'🧴', nama:'Skincare',                 jenis:'Pengeluaran', ket:'Produk perawatan kulit',      tgl:'2024-01-15'},
+    {id:80,  icon:'💄', nama:'Kosmetik',                 jenis:'Pengeluaran', ket:'Makeup, kosmetik',            tgl:'2024-01-15'},
+    {id:81,  icon:'📱', nama:'Gadget',                   jenis:'Pengeluaran', ket:'HP, laptop, aksesoris gadget',tgl:'2024-01-15'},
+    // I. Sosial & Keluarga
+    {id:82,  icon:'👴', nama:'Kirim Uang Orang Tua',    jenis:'Pengeluaran', ket:'Transfer ke orang tua',       tgl:'2024-01-15'},
+    {id:83,  icon:'👨‍👩‍👧', nama:'Bantuan Keluarga',       jenis:'Pengeluaran', ket:'Bantu biaya keluarga',        tgl:'2024-01-15'},
+    {id:84,  icon:'🎁', nama:'Hadiah',                   jenis:'Pengeluaran', ket:'Beli hadiah orang lain',      tgl:'2024-01-15'},
+    {id:85,  icon:'🤲', nama:'Sumbangan',                jenis:'Pengeluaran', ket:'Donasi, sumbangan',           tgl:'2024-01-15'},
+    {id:86,  icon:'🌙', nama:'Zakat',                    jenis:'Pengeluaran', ket:'Zakat mal, zakat fitrah',     tgl:'2024-01-15'},
+    {id:87,  icon:'❤️', nama:'Infaq / Sedekah',         jenis:'Pengeluaran', ket:'Sedekah rutin',               tgl:'2024-01-15'},
+    // J. Pekerjaan
+    {id:88,  icon:'🖥️', nama:'Alat Kerja',              jenis:'Pengeluaran', ket:'Peralatan kerja',             tgl:'2024-01-15'},
+    {id:89,  icon:'📶', nama:'Internet',                 jenis:'Pengeluaran', ket:'Tagihan internet/wifi',       tgl:'2024-01-15'},
+    {id:90,  icon:'🔑', nama:'Software / Tools',         jenis:'Pengeluaran', ket:'Langganan software',          tgl:'2024-01-15'},
+    {id:91,  icon:'🚇', nama:'Transport Kerja',          jenis:'Pengeluaran', ket:'Ongkos ke kantor',            tgl:'2024-01-15'},
+    // K. Hiburan & Traveling
+    {id:92,  icon:'✈️', nama:'Tiket',                   jenis:'Pengeluaran', ket:'Tiket pesawat/kereta',        tgl:'2024-01-15'},
+    {id:93,  icon:'🏨', nama:'Hotel',                    jenis:'Pengeluaran', ket:'Akomodasi menginap',          tgl:'2024-01-15'},
+    {id:94,  icon:'🌴', nama:'Wisata',                   jenis:'Pengeluaran', ket:'Tiket wisata, destinasi',     tgl:'2024-01-15'},
+    {id:95,  icon:'🎪', nama:'Oleh-oleh',                jenis:'Pengeluaran', ket:'Beli oleh-oleh',              tgl:'2024-01-15'},
+    // L. Darurat
+    {id:96,  icon:'🆘', nama:'Biaya Tak Terduga',        jenis:'Pengeluaran', ket:'Pengeluaran mendadak',        tgl:'2024-01-15'},
+    {id:97,  icon:'🔩', nama:'Perbaikan Mendadak',       jenis:'Pengeluaran', ket:'Servis darurat',              tgl:'2024-01-15'},
+    {id:98,  icon:'⚡', nama:'Kebutuhan Mendesak',       jenis:'Pengeluaran', ket:'Keperluan darurat',           tgl:'2024-01-15'},
+
+    // ===================== TABUNGAN =====================
+    // A. Tabungan Rutin
+    {id:99,  icon:'📅', nama:'Tabungan Harian',          jenis:'Tabungan', ket:'Sisa uang harian',              tgl:'2024-01-15'},
+    {id:100, icon:'📆', nama:'Tabungan Mingguan',        jenis:'Tabungan', ket:'Tabungan tiap minggu',          tgl:'2024-01-15'},
+    {id:101, icon:'🗓️', nama:'Tabungan Bulanan',         jenis:'Tabungan', ket:'Tabungan rutin bulanan',        tgl:'2024-01-15'},
+    {id:102, icon:'👨‍👩‍👧', nama:'Tabungan Keluarga',       jenis:'Tabungan', ket:'Tabungan untuk keluarga',      tgl:'2024-01-15'},
+    {id:103, icon:'💑', nama:'Tabungan Pasangan',        jenis:'Tabungan', ket:'Tabungan bersama pasangan',     tgl:'2024-01-15'},
+    // B. Dana Darurat
+    {id:104, icon:'🛡️', nama:'Dana Darurat Utama',       jenis:'Tabungan', ket:'3-6 bulan biaya hidup',        tgl:'2024-01-15'},
+    {id:105, icon:'🔒', nama:'Dana Darurat Cadangan',    jenis:'Tabungan', ket:'Cadangan dana darurat',         tgl:'2024-01-15'},
+    {id:106, icon:'📉', nama:'Dana Krisis',              jenis:'Tabungan', ket:'PHK / usaha turun',             tgl:'2024-01-15'},
+    {id:107, icon:'🏥', nama:'Dana Kesehatan Darurat',   jenis:'Tabungan', ket:'Biaya kesehatan mendadak',      tgl:'2024-01-15'},
+    // C. Tabungan Tujuan - Aset Besar
+    {id:108, icon:'🏠', nama:'Tabungan Rumah',           jenis:'Tabungan', ket:'DP atau beli rumah',            tgl:'2024-01-15'},
+    {id:109, icon:'🔨', nama:'Tabungan Renovasi',        jenis:'Tabungan', ket:'Renovasi rumah',                tgl:'2024-01-15'},
+    {id:110, icon:'🌱', nama:'Tabungan Tanah',           jenis:'Tabungan', ket:'Beli tanah investasi',          tgl:'2024-01-15'},
+    // Kendaraan
+    {id:111, icon:'🏍️', nama:'Tabungan Motor',           jenis:'Tabungan', ket:'Beli motor baru',              tgl:'2024-01-15'},
+    {id:112, icon:'🚘', nama:'Tabungan Mobil',           jenis:'Tabungan', ket:'Beli mobil baru',              tgl:'2024-01-15'},
+    {id:113, icon:'🔧', nama:'Tabungan Servis',          jenis:'Tabungan', ket:'Tabungan servis kendaraan',    tgl:'2024-01-15'},
+    // Kehidupan Pribadi
+    {id:114, icon:'💍', nama:'Tabungan Pernikahan',      jenis:'Tabungan', ket:'Biaya pernikahan',             tgl:'2024-01-15'},
+    {id:115, icon:'👶', nama:'Tabungan Melahirkan',      jenis:'Tabungan', ket:'Biaya persalinan',             tgl:'2024-01-15'},
+    {id:116, icon:'🍼', nama:'Tabungan Anak',            jenis:'Tabungan', ket:'Kebutuhan anak',               tgl:'2024-01-15'},
+    // Lifestyle
+    {id:117, icon:'✈️', nama:'Tabungan Liburan',         jenis:'Tabungan', ket:'Biaya traveling',              tgl:'2024-01-15'},
+    {id:118, icon:'🕌', nama:'Tabungan Umroh',           jenis:'Tabungan', ket:'Biaya umroh',                  tgl:'2024-01-15'},
+    {id:119, icon:'🕋', nama:'Tabungan Haji',            jenis:'Tabungan', ket:'Biaya haji',                   tgl:'2024-01-15'},
+    // Pendidikan
+    {id:120, icon:'🏫', nama:'Tabungan Sekolah',         jenis:'Tabungan', ket:'Biaya sekolah anak',           tgl:'2024-01-15'},
+    {id:121, icon:'🎓', nama:'Tabungan Kuliah',          jenis:'Tabungan', ket:'Biaya kuliah',                 tgl:'2024-01-15'},
+    {id:122, icon:'📚', nama:'Tabungan Kursus',          jenis:'Tabungan', ket:'Biaya kursus',                 tgl:'2024-01-15'},
+    // D. Tabungan Kewajiban
+    {id:123, icon:'📋', nama:'Tabungan Pajak',           jenis:'Tabungan', ket:'Persiapan bayar pajak',        tgl:'2024-01-15'},
+    {id:124, icon:'🌙', nama:'Tabungan Zakat',           jenis:'Tabungan', ket:'Persiapan zakat mal',          tgl:'2024-01-15'},
+    {id:125, icon:'📅', nama:'Tabungan Cicilan Tahunan', jenis:'Tabungan', ket:'Cicilan yang dibayar tahunan', tgl:'2024-01-15'},
+    {id:126, icon:'💡', nama:'Tabungan Tagihan Besar',   jenis:'Tabungan', ket:'Tagihan besar tahunan',        tgl:'2024-01-15'},
+    // E. Tabungan Khusus
+    {id:127, icon:'📱', nama:'Tabungan Gadget',          jenis:'Tabungan', ket:'Beli gadget baru',             tgl:'2024-01-15'},
+    {id:128, icon:'🛋️', nama:'Tabungan Furniture',       jenis:'Tabungan', ket:'Beli perabot rumah',           tgl:'2024-01-15'},
+    {id:129, icon:'🎯', nama:'Tabungan Hobi',            jenis:'Tabungan', ket:'Keperluan hobi',               tgl:'2024-01-15'},
+    {id:130, icon:'🎁', nama:'Tabungan Hadiah',          jenis:'Tabungan', ket:'Beli hadiah spesial',          tgl:'2024-01-15'},
+    // F. Tabungan Bisnis
+    {id:131, icon:'💰', nama:'Dana Modal Usaha',         jenis:'Tabungan', ket:'Modal untuk bisnis',           tgl:'2024-01-15'},
+    {id:132, icon:'⚙️', nama:'Dana Operasional',         jenis:'Tabungan', ket:'Biaya operasional usaha',      tgl:'2024-01-15'},
+    {id:133, icon:'🚀', nama:'Dana Ekspansi',            jenis:'Tabungan', ket:'Pengembangan bisnis',          tgl:'2024-01-15'},
+    {id:134, icon:'🔒', nama:'Dana Cadangan Bisnis',     jenis:'Tabungan', ket:'Cadangan usaha',               tgl:'2024-01-15'},
+    // G. Tabungan Cadangan
+    {id:135, icon:'🎲', nama:'Dana Tak Terduga',         jenis:'Tabungan', ket:'Keperluan tak terduga',        tgl:'2024-01-15'},
+    {id:136, icon:'💾', nama:'Dana Backup',              jenis:'Tabungan', ket:'Cadangan finansial',           tgl:'2024-01-15'},
+    {id:137, icon:'🔐', nama:'Dana Keamanan Finansial',  jenis:'Tabungan', ket:'Dana keamanan jangka panjang', tgl:'2024-01-15'},
+
+    // ===================== INVESTASI =====================
+    // A. Pasar Modal - Saham
+    {id:138, icon:'📊', nama:'Saham Blue Chip',          jenis:'Tabungan', ket:'Investasi saham unggulan',     tgl:'2024-01-15'},
+    {id:139, icon:'📈', nama:'Saham Growth',             jenis:'Tabungan', ket:'Saham pertumbuhan',            tgl:'2024-01-15'},
+    {id:140, icon:'💵', nama:'Saham Dividen',            jenis:'Tabungan', ket:'Saham penghasil dividen',      tgl:'2024-01-15'},
+    {id:141, icon:'⚡', nama:'Saham Trading',            jenis:'Tabungan', ket:'Trading saham jangka pendek', tgl:'2024-01-15'},
+    // Reksa Dana
+    {id:142, icon:'💹', nama:'Reksa Dana Pasar Uang',    jenis:'Tabungan', ket:'Investasi reksadana pasar uang',tgl:'2024-01-15'},
+    {id:143, icon:'📉', nama:'Reksa Dana Pendapatan',    jenis:'Tabungan', ket:'Reksadana pendapatan tetap',   tgl:'2024-01-15'},
+    {id:144, icon:'🔀', nama:'Reksa Dana Campuran',      jenis:'Tabungan', ket:'Reksadana campuran',           tgl:'2024-01-15'},
+    {id:145, icon:'🏆', nama:'Reksa Dana Saham',         jenis:'Tabungan', ket:'Reksadana saham',              tgl:'2024-01-15'},
+    // Obligasi
+    {id:146, icon:'🏛️', nama:'Obligasi Pemerintah',      jenis:'Tabungan', ket:'ORI, SBR, SR',                tgl:'2024-01-15'},
+    {id:147, icon:'🏢', nama:'Obligasi Korporasi',       jenis:'Tabungan', ket:'Surat utang perusahaan',       tgl:'2024-01-15'},
+    {id:148, icon:'☪️', nama:'Sukuk',                    jenis:'Tabungan', ket:'Obligasi syariah',             tgl:'2024-01-15'},
+    // B. Aset Digital
+    {id:149, icon:'₿',  nama:'Crypto',                   jenis:'Tabungan', ket:'Bitcoin, Ethereum, dll',       tgl:'2024-01-15'},
+    {id:150, icon:'🖼️', nama:'NFT',                      jenis:'Tabungan', ket:'Non-fungible token',           tgl:'2024-01-15'},
+    // C. Logam Mulia
+    {id:151, icon:'🥇', nama:'Emas',                     jenis:'Tabungan', ket:'Antam, UBS, tabungan emas',    tgl:'2024-01-15'},
+    {id:152, icon:'🥈', nama:'Perak',                    jenis:'Tabungan', ket:'Investasi perak',              tgl:'2024-01-15'},
+    // D. Properti
+    {id:153, icon:'🏘️', nama:'Rumah Sewa',               jenis:'Tabungan', ket:'Investasi properti sewa',      tgl:'2024-01-15'},
+    {id:154, icon:'🏠', nama:'Kos-kosan',                jenis:'Tabungan', ket:'Investasi kos-kosan',          tgl:'2024-01-15'},
+    {id:155, icon:'🌿', nama:'Tanah Investasi',          jenis:'Tabungan', ket:'Beli tanah untuk investasi',   tgl:'2024-01-15'},
+    // E. Bisnis
+    {id:156, icon:'💼', nama:'Investasi Usaha Sendiri',  jenis:'Tabungan', ket:'Modal bisnis sendiri',         tgl:'2024-01-15'},
+    {id:157, icon:'🤝', nama:'Patungan Usaha',           jenis:'Tabungan', ket:'Investasi patungan',           tgl:'2024-01-15'},
+    {id:158, icon:'🏪', nama:'Franchise Investasi',      jenis:'Tabungan', ket:'Modal franchise',              tgl:'2024-01-15'},
+    // F. Deposito
+    {id:159, icon:'🏦', nama:'Deposito Berjangka',       jenis:'Tabungan', ket:'Deposito bank',                tgl:'2024-01-15'},
+    {id:160, icon:'💰', nama:'Tabungan Berbunga',        jenis:'Tabungan', ket:'Tabungan bunga tinggi',        tgl:'2024-01-15'},
+    // G. P2P & Alternatif
+    {id:161, icon:'🔗', nama:'P2P Lending',              jenis:'Tabungan', ket:'Peer-to-peer lending',         tgl:'2024-01-15'},
+    {id:162, icon:'👥', nama:'Crowdfunding',             jenis:'Tabungan', ket:'Investasi crowdfunding',       tgl:'2024-01-15'},
+    // H. Dana Pensiun
+    {id:163, icon:'👴', nama:'Dana Pensiun Pribadi',     jenis:'Tabungan', ket:'Tabungan pensiun mandiri',     tgl:'2024-01-15'},
+    {id:164, icon:'🏢', nama:'BPJS Ketenagakerjaan',     jenis:'Tabungan', ket:'JHT, JP BPJS TK',             tgl:'2024-01-15'},
+    {id:165, icon:'📄', nama:'Asuransi Unit Link',       jenis:'Tabungan', ket:'Asuransi sekaligus investasi', tgl:'2024-01-15'},
+    // I. Trading
+    {id:166, icon:'💱', nama:'Forex',                    jenis:'Tabungan', ket:'Trading valuta asing',        tgl:'2024-01-15'},
+    {id:167, icon:'📊', nama:'Futures',                  jenis:'Tabungan', ket:'Trading futures/kontrak',     tgl:'2024-01-15'},
   ],
   transaksi: [
     {id:1, tgl:'2025-03-21', jam:'08:30:00', kat:'Gaji', ket:'Gaji bulan Maret', jenis:'Pemasukan', nominal:5000000, struk:null},
@@ -3174,20 +3384,13 @@ const DEFAULT_DATA = {
     {id:4, nama:'Investasi', icon:'📈', target:20000000, tercapai:8000000},
   ],
   dompet: [
-    {id:1, nama:'Dompet Tunai', tipe:'tunai', icon:'💵', warna:'#27ae60', saldo:500000},
-    {id:2, nama:'Dana', tipe:'digital', icon:'🔵', warna:'#0066ff', saldo:200000},
-    {id:3, nama:'OVO', tipe:'digital', icon:'🟣', warna:'#4b0082', saldo:150000},
-    {id:4, nama:'GoPay', tipe:'digital', icon:'🟢', warna:'#00aa13', saldo:100000},
-    {id:5, nama:'ShopeePay', tipe:'digital', icon:'🟠', warna:'#ee4d2d', saldo:75000},
-  ],
-  dompet: [
     {id:1, nama:'Dompet Tunai', tipe:'tunai', icon:'💵', warna:'#27ae60', saldo:0},
     {id:2, nama:'Dana', tipe:'digital', icon:'🔵', warna:'#0066ff', saldo:0},
     {id:3, nama:'OVO', tipe:'digital', icon:'🟣', warna:'#4b0082', saldo:0},
     {id:4, nama:'GoPay', tipe:'digital', icon:'🟢', warna:'#00aa13', saldo:0},
     {id:5, nama:'ShopeePay', tipe:'digital', icon:'🟠', warna:'#ee4d2d', saldo:0},
   ],
-  nextId: {kat:7, tr:7, hp:4, rek:4, tg:5, dom:6},
+  nextId: {kat:168, tr:7, hp:4, rek:4, tg:5, dom:6},
   mutasi: [],
   profilePhoto: null,
   profile: {nama:'Wiki Ade Novit, S.E', email:'wiki.ade@keuangan.com', telp:'+62 812-XXXX-XXXX', jabatan:'Administrator', dept:'Keuangan & Akuntansi'},
@@ -3427,6 +3630,27 @@ function resetFirebaseConfig() {
   localStorage.removeItem(FB_CONFIG_KEY);
   db = null; fbEnabled = false;
   location.reload();
+}
+
+function importKategoriDefault() {
+  const existing = store.kategori.map(k => k.nama.toLowerCase());
+  const defaults = JSON.parse(JSON.stringify(DEFAULT_DATA.kategori));
+  let added = 0, skipped = 0;
+
+  defaults.forEach(k => {
+    if (!existing.includes(k.nama.toLowerCase())) {
+      k.id = store.nextId.kat++;
+      k.tgl = today();
+      store.kategori.push(k);
+      added++;
+    } else {
+      skipped++;
+    }
+  });
+
+  saveStore();
+  renderKategori();
+  showToast(`✅ ${added} kategori ditambahkan, ${skipped} sudah ada (dilewati)`);
 }
 
 function exportData() {
@@ -4144,7 +4368,12 @@ function renderKategori() {
     tbody.innerHTML += `
     <tr>
       <td>${i+1}</td>
-      <td><span style="font-size:18px;margin-right:6px;">${icon}</span><strong>${k.nama}</strong></td>
+      <td>
+        <span class="kat-icon-btn" onclick="quickEditIcon(${k.id})" title="Klik untuk ganti ikon" 
+          style="font-size:20px;margin-right:6px;cursor:pointer;transition:transform .2s;" 
+          onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'">${icon}</span>
+        <strong>${k.nama}</strong>
+      </td>
       <td><span class="badge ${badgeClass}">${k.jenis}</span></td>
       <td>${k.ket||'-'}</td>
       <td>${fmtDate(k.tgl)}</td>
@@ -4154,6 +4383,50 @@ function renderKategori() {
       </td>
     </tr>`;
   });
+}
+
+function quickEditIcon(id) {
+  const k = store.kategori.find(k=>k.id===id);
+  if (!k) return;
+  const ICONS = ['💼','🔨','📋','💻','🏷️','🎯','⏰','🎁','🏆','🛒','🔧','📈','📦','🏪','🏦','📊','🏠','🚗','🎵','📉','🪙','🥇','💹','👥','↩️','🎀','🤝','💳','🔄','🛡️','🍚','🥤','💧','⚡','🔥','🏡','🧹','⛽','🛵','🚌','🅿️','🛣️','📋','🏍️','🚘','📱','💊','🏥','🩺','💚','🎓','📚','🏅','☕','🍽️','🎬','📺','🎮','👕','👟','💍','🧴','💄','👴','🎲','💾','🔐','₿','🥈','🔗','👶','🍼','✈️','🕌','🕋','💑','⚙️','🚀','🌙','❤️','🖥️','📶','🔑','🚇','🌴','🎪','🆘','🔩','💰','🏘️','🌿','🔒'];
+  
+  // Create quick pick popup
+  const existing = document.getElementById('quick-icon-popup');
+  if (existing) existing.remove();
+  
+  const popup = document.createElement('div');
+  popup.id = 'quick-icon-popup';
+  popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  popup.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:20px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+        <strong>Ganti Ikon: ${k.nama}</strong>
+        <button onclick="document.getElementById('quick-icon-popup').remove()" style="border:none;background:none;cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <input type="text" placeholder="Atau ketik emoji..." id="quick-icon-input" value="${k.icon||'💰'}"
+        style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:18px;text-align:center;margin-bottom:10px;">
+      <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:160px;overflow-y:auto;margin-bottom:12px;">
+        ${ICONS.map(ic => `<span onclick="document.getElementById('quick-icon-input').value='${ic}'" 
+          style="font-size:22px;cursor:pointer;padding:4px;border-radius:4px;transition:background .1s;" 
+          onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''">${ic}</span>`).join('')}
+      </div>
+      <button onclick="applyQuickIcon(${id})" class="btn btn-success" style="width:100%;">✅ Simpan Ikon</button>
+    </div>`;
+  document.body.appendChild(popup);
+  popup.addEventListener('click', e => { if(e.target===popup) popup.remove(); });
+}
+
+function applyQuickIcon(id) {
+  const icon = document.getElementById('quick-icon-input')?.value?.trim();
+  if (!icon) return;
+  const k = store.kategori.find(k=>k.id===id);
+  if (k) {
+    k.icon = icon;
+    saveStore();
+    renderKategori();
+    showToast('Ikon berhasil diubah!');
+  }
+  document.getElementById('quick-icon-popup')?.remove();
 }
 
 function saveKategori() {
