@@ -896,46 +896,9 @@ table tbody tr:hover { background: #fafafa; }
 .dompet-card:hover .dc-actions { opacity: 1; }
 .dc-action-btn { background: rgba(255,255,255,.25); border: none; color: #fff; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
 .dc-action-btn:hover { background: rgba(255,255,255,.4); }
-/* Year filter buttons in black cards */
-.year-filter-btn {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.15);
-  color: rgba(255,255,255,.85);
-  border-radius: 5px;
-  padding: 5px 9px;
-  margin-bottom: 5px;
-  cursor: pointer;
-  font-family: var(--font-main);
-  font-size: 12px;
-  transition: all .2s;
-  text-align: left;
-}
-.year-filter-btn:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.35); }
-.year-filter-btn.active { background: rgba(255,255,255,.25); border-color: #fff; color: #fff; }
-.year-filter-btn.active .yfb-year { font-weight: 700; }
-.yfb-year { font-weight: 600; min-width: 36px; }
-.yfb-masuk { color: #7dcea0; font-size: 11px; }
-.yfb-keluar { color: #f1948a; font-size: 11px; }
-.year-all-btn {
-  display: block;
-  width: 100%;
-  background: transparent;
-  border: 1px dashed rgba(255,255,255,.2);
-  color: rgba(255,255,255,.5);
-  border-radius: 4px;
-  padding: 3px;
-  cursor: pointer;
-  font-size: 10px;
-  font-family: var(--font-main);
-  margin-top: 2px;
-  transition: all .2s;
-}
-.year-all-btn:hover { color: #fff; border-color: rgba(255,255,255,.4); }
-.year-all-btn.active { color: #fff; background: rgba(255,255,255,.1); }
+/* Year filter colors */
+.yfb-masuk { color: #7dcea0; }
+.yfb-keluar { color: #f1948a; }
 
 .dompet-total-bar {
   background: #fff;
@@ -1405,12 +1368,17 @@ table tbody tr:hover { background: #fafafa; }
             <button class="filter-btn" onclick="setCardFilter(2,'tahun',this)">Per Tahun</button>
           </div>
         </div>
-        <!-- Seluruh Pemasukan - Filter Tahun -->
+        <!-- Filter Tahun Dashboard -->
         <div class="summary-card" style="background:var(--black-card);cursor:default;">
-          <div class="card-icon">📊</div>
-          <div class="card-label" style="margin-bottom:6px;opacity:.7;">🗓️ Filter Tahun Dashboard</div>
-          <div id="year-filter-masuk" style="font-size:12px;"></div>
-          <div style="margin-top:8px;font-size:10px;opacity:.5;">Klik tahun untuk filter semua kartu</div>
+          <div class="card-icon" style="opacity:.6;">🗓️</div>
+          <div class="card-label" style="opacity:.7;margin-bottom:10px;">Filter Tahun</div>
+          <select id="dash-year-select" onchange="setDashYearFilter(this.value?parseInt(this.value):null)"
+            style="width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+                   color:#fff;border-radius:6px;padding:8px 10px;font-size:14px;font-weight:700;
+                   font-family:var(--font-main);cursor:pointer;outline:none;margin-bottom:6px;">
+            <option value="" style="background:#1a1a2e;color:#fff;">Semua Tahun</option>
+          </select>
+          <div id="year-active-label" style="font-size:10px;opacity:.5;text-align:center;">Semua data ditampilkan</div>
         </div>
         <!-- Pengeluaran Hari Ini -->
         <div class="summary-card" style="background:var(--red)">
@@ -1448,11 +1416,18 @@ table tbody tr:hover { background: #fafafa; }
             <button class="filter-btn" onclick="setCardFilter(6,'tahun',this)">Per Tahun</button>
           </div>
         </div>
-        <!-- Seluruh Pengeluaran - Per Tahun -->
+        <!-- Ringkasan Tahun Terpilih -->
         <div class="summary-card" style="background:var(--black-card);cursor:default;">
-          <div class="card-icon">💸</div>
-          <div class="card-label" style="margin-bottom:6px;opacity:.7;">📊 Ringkasan Per Tahun</div>
-          <div id="year-filter-keluar" style="font-size:12px;"></div>
+          <div class="card-icon" style="opacity:.6;">📊</div>
+          <div class="card-label" id="year-summary-title" style="opacity:.7;margin-bottom:10px;">Ringkasan Tahun Ini</div>
+          <div style="margin-bottom:6px;">
+            <div style="font-size:10px;opacity:.55;margin-bottom:2px;">TOTAL PEMASUKAN</div>
+            <div id="year-sum-masuk" style="font-size:17px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#7dcea0;letter-spacing:.5px;">Rp. 0</div>
+          </div>
+          <div>
+            <div style="font-size:10px;opacity:.55;margin-bottom:2px;">TOTAL PENGELUARAN</div>
+            <div id="year-sum-keluar" style="font-size:17px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#f1948a;letter-spacing:.5px;">Rp. 0</div>
+          </div>
           <div id="card-masuk-all" style="display:none;"></div>
           <div id="card-keluar-all" style="display:none;"></div>
         </div>
@@ -3483,44 +3458,42 @@ const cardJenis = ['Pemasukan','Pemasukan','Pemasukan','Pemasukan',
 
 function renderYearFilterCards() {
   const years = [...new Set(store.transaksi.map(t => new Date(t.tgl).getFullYear()))].sort().reverse();
-  const masukEl = document.getElementById('year-filter-masuk');
-  const keluarEl = document.getElementById('year-filter-keluar');
-  
-  if (!masukEl && !keluarEl) return;
+  const sel = document.getElementById('dash-year-select');
+  const label = document.getElementById('year-active-label');
+  const titleEl = document.getElementById('year-summary-title');
+  const sumMasuk = document.getElementById('year-sum-masuk');
+  const sumKeluar = document.getElementById('year-sum-keluar');
 
-  if (years.length === 0) {
-    const empty = '<span style="opacity:.5;font-size:12px;">Belum ada transaksi</span>';
-    if (masukEl) masukEl.innerHTML = empty;
-    if (keluarEl) keluarEl.innerHTML = '';
-    return;
+  // Populate dropdown
+  if (sel) {
+    const curVal = sel.value;
+    sel.innerHTML = '<option value="" style="background:#1a1a2e;color:#fff;">Semua Tahun</option>';
+    years.forEach(y => {
+      sel.innerHTML += `<option value="${y}" style="background:#1a1a2e;color:#fff;" ${dashYearFilter===y?'selected':''}>${y}</option>`;
+    });
+    // Restore selection
+    if (dashYearFilter) sel.value = dashYearFilter;
   }
 
-  // Build year rows for left card (filter buttons)
-  let filterHtml = years.map(y => {
-    const masuk = store.transaksi.filter(t=>t.jenis==='Pemasukan'&&new Date(t.tgl).getFullYear()===y).reduce((s,t)=>s+t.nominal,0);
-    const isActive = dashYearFilter === y;
-    return `<button class="year-filter-btn ${isActive?'active':''}" onclick="setDashYearFilter(${isActive?'null':y})">
-      <span class="yfb-year">${y}</span>
-      <span class="yfb-masuk">${fmtRpShort(masuk)}</span>
-    </button>`;
-  }).join('');
-  filterHtml += `<button class="year-all-btn ${!dashYearFilter?'active':''}" onclick="setDashYearFilter(null)">Semua Tahun</button>`;
-  if (masukEl) masukEl.innerHTML = filterHtml;
+  // Update active label
+  if (label) {
+    label.textContent = dashYearFilter
+      ? `Menampilkan data tahun ${dashYearFilter}`
+      : 'Semua data ditampilkan';
+  }
 
-  // Build summary for right card (pemasukan vs pengeluaran per year)
-  let summaryHtml = years.slice(0, 4).map(y => {
-    const masuk = store.transaksi.filter(t=>t.jenis==='Pemasukan'&&new Date(t.tgl).getFullYear()===y).reduce((s,t)=>s+t.nominal,0);
-    const keluar = store.transaksi.filter(t=>t.jenis==='Pengeluaran'&&new Date(t.tgl).getFullYear()===y).reduce((s,t)=>s+t.nominal,0);
-    const isActive = dashYearFilter === y;
-    return `<div style="margin-bottom:6px;padding:5px 8px;background:rgba(255,255,255,${isActive?.15:.06});border-radius:5px;border:1px solid rgba(255,255,255,${isActive?.25:.1});">
-      <div style="font-weight:700;font-size:11px;color:rgba(255,255,255,.8);margin-bottom:3px;">${y}</div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;">
-        <span class="yfb-masuk">▲ ${fmtRpShort(masuk)}</span>
-        <span class="yfb-keluar">▼ ${fmtRpShort(keluar)}</span>
-      </div>
-    </div>`;
-  }).join('');
-  if (keluarEl) keluarEl.innerHTML = summaryHtml;
+  // Update right card summary
+  const useYear = dashYearFilter || new Date().getFullYear();
+  const masukTotal = store.transaksi
+    .filter(t => t.jenis==='Pemasukan' && new Date(t.tgl).getFullYear()===useYear)
+    .reduce((s,t)=>s+t.nominal, 0);
+  const keluarTotal = store.transaksi
+    .filter(t => t.jenis==='Pengeluaran' && new Date(t.tgl).getFullYear()===useYear)
+    .reduce((s,t)=>s+t.nominal, 0);
+
+  if (titleEl) titleEl.textContent = dashYearFilter ? `Ringkasan ${dashYearFilter}` : `Ringkasan ${useYear}`;
+  if (sumMasuk) sumMasuk.textContent = fmtRpShort(masukTotal);
+  if (sumKeluar) sumKeluar.textContent = fmtRpShort(keluarTotal);
 }
 
 function updateCards() {
