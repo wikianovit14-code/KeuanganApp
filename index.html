@@ -3802,10 +3802,19 @@ function saveTransaksi() {
   const jenis = document.getElementById('tr-jenis').value;
   const ket = document.getElementById('tr-ket').value.trim();
   const nominal = getRawNum('tr-nominal') || 0;
+  const sumberId = document.getElementById('tr-sumber')?.value || '';
   const editId = document.getElementById('tr-edit-id').value;
-  
+
   if (!tgl || !jenis || !nominal) return showToast('Tanggal, Jenis, dan Nominal wajib diisi!','red');
-  
+
+  // Validasi saldo HANYA untuk Pengeluaran
+  if (sumberId && jenis === 'Pengeluaran' && !editId) {
+    const src = getDompetById(sumberId);
+    if (src && src.saldo < nominal) {
+      return showToast(`Saldo ${src.nama} tidak cukup! Saldo: ${fmtRpShort(src.saldo)}`, 'red');
+    }
+  }
+
   const sumberObj = sumberId ? getDompetById(sumberId) : null;
   const sumberNama = sumberObj ? sumberObj.nama : '';
 
