@@ -870,6 +870,48 @@ table tbody tr:hover { background: #fafafa; }
   @page { size: A4 landscape; margin: 15mm; }
 }
 
+/* ===== DOMPET CARDS ===== */
+.dompet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.dompet-card {
+  border-radius: 12px;
+  padding: 18px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+.dompet-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.dompet-card .dc-icon { font-size: 28px; margin-bottom: 8px; }
+.dompet-card .dc-nama { font-size: 12px; opacity: .85; margin-bottom: 4px; }
+.dompet-card .dc-saldo { font-size: 20px; font-weight: 700; font-family: 'Bebas Neue', sans-serif; letter-spacing: .5px; }
+.dompet-card .dc-tipe { font-size: 10px; opacity: .7; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+.dompet-card .dc-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 4px; opacity: 0; transition: opacity .2s; }
+.dompet-card:hover .dc-actions { opacity: 1; }
+.dc-action-btn { background: rgba(255,255,255,.25); border: none; color: #fff; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.dc-action-btn:hover { background: rgba(255,255,255,.4); }
+.dompet-total-bar {
+  background: #fff;
+  border-radius: 8px;
+  padding: 14px 18px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.dompet-total-bar .dt-item { text-align: center; }
+.dompet-total-bar .dt-label { font-size: 11px; color: #888; margin-bottom: 2px; }
+.dompet-total-bar .dt-value { font-size: 16px; font-weight: 700; font-family: 'Bebas Neue', sans-serif; }
+
 /* ===== REKENING STATS ===== */
 .rek-stats {
   display: grid;
@@ -1233,6 +1275,9 @@ table tbody tr:hover { background: #fafafa; }
     <a class="nav-item" onclick="navigateTo('rekening')">
       <span class="nav-icon">🏦</span> Rekening Bank
     </a>
+    <a class="nav-item" onclick="navigateTo('dompet')">
+      <span class="nav-icon">👛</span> Dompet & E-Wallet
+    </a>
     <a class="nav-item" onclick="navigateTo('pengguna')">
       <span class="nav-icon">👥</span> Data Pengguna
     </a>
@@ -1414,6 +1459,11 @@ table tbody tr:hover { background: #fafafa; }
               <div class="cs-total" style="color:var(--gold-dark)" id="cs-tabung-total">Rp. 0 ,-</div>
             </div>
           </div>
+          <!-- Dompet quick summary -->
+          <div style="margin-top:12px;padding:10px 14px;background:#f8f9fa;border-radius:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <span style="font-size:12px;color:#888;font-weight:600;">👛 Total Semua Dompet & Rekening</span>
+            <span id="dash-dom-total" style="font-size:16px;font-weight:700;color:var(--blue);font-family:'Bebas Neue',sans-serif;cursor:pointer;" onclick="navigateTo('dompet')">Rp. 0</span>
+          </div>
         </div>
         <div class="calendar-card">
           <div class="cal-header">
@@ -1490,7 +1540,7 @@ table tbody tr:hover { background: #fafafa; }
           <table id="tbl-transaksi">
             <thead><tr>
               <th>No</th><th>Tanggal</th><th>Jam</th><th>Kategori</th>
-              <th>Keterangan</th><th>Jenis</th><th>Nominal</th><th>Struk</th><th>Aksi</th>
+              <th>Keterangan</th><th>Jenis</th><th>Nominal</th><th>Dari/Ke</th><th>Struk</th><th>Aksi</th>
             </tr></thead>
             <tbody id="tbody-transaksi"></tbody>
           </table>
@@ -1555,6 +1605,58 @@ table tbody tr:hover { background: #fafafa; }
             <button onclick="document.getElementById('hp-detail-panel').style.display='none'" style="background:#eee;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕ Tutup</button>
           </div>
           <div id="hp-detail-body" style="padding:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== DOMPET & E-WALLET ========== -->
+    <div class="page" id="page-dompet">
+      <div class="page-header">
+        <div class="page-title"><h2>👛 Dompet & E-Wallet</h2></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-warning" onclick="openModal('modalTransferDompet','Transfer Antar Dompet')">🔄 Transfer</button>
+          <button class="btn btn-success" onclick="openModal('modalDompet','Tambah Dompet')">➕ Tambah Dompet</button>
+        </div>
+      </div>
+
+      <!-- Total bar -->
+      <div class="dompet-total-bar">
+        <div class="dt-item">
+          <div class="dt-label">Total Semua Dompet</div>
+          <div class="dt-value" id="dom-total-all" style="color:var(--blue)">Rp. 0</div>
+        </div>
+        <div class="dt-item">
+          <div class="dt-label">Tunai</div>
+          <div class="dt-value" id="dom-total-tunai" style="color:var(--green)">Rp. 0</div>
+        </div>
+        <div class="dt-item">
+          <div class="dt-label">Digital (E-Wallet)</div>
+          <div class="dt-value" id="dom-total-digital" style="color:var(--purple)">Rp. 0</div>
+        </div>
+        <div class="dt-item">
+          <div class="dt-label">Bank</div>
+          <div class="dt-value" id="dom-total-bank" style="color:var(--orange)">Rp. 0</div>
+        </div>
+      </div>
+
+      <!-- Dompet grid cards -->
+      <div class="dompet-grid" id="dompet-grid"></div>
+
+      <!-- Riwayat mutasi dompet -->
+      <div class="card-box" style="margin-top:6px;">
+        <div class="card-box-header">
+          <h3>📋 Riwayat Mutasi Dompet</h3>
+          <select id="filter-dom-mutasi" onchange="renderDompetMutasi()" style="padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+            <option value="">Semua Dompet</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Tgl</th><th>Dompet</th><th>Keterangan</th><th>Jenis</th><th>Nominal</th><th>Saldo Sesudah</th>
+            </tr></thead>
+            <tbody id="tbody-dom-mutasi"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1953,6 +2055,15 @@ table tbody tr:hover { background: #fafafa; }
       </div>
       <div class="form-row">
         <div class="form-group">
+          <label>💰 Sumber / Tujuan Dana</label>
+          <select id="tr-sumber" onchange="updateSumberInfo()">
+            <option value="">-- Pilih Dompet/Rekening (Opsional) --</option>
+          </select>
+        </div>
+      </div>
+      <div id="tr-sumber-info" style="display:none;background:#f0f9ff;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#555;"></div>
+      <div class="form-row">
+        <div class="form-group">
           <label>Upload Struk Belanja</label>
           <div class="upload-zone" onclick="document.getElementById('struk-file').click()">
             <input type="file" id="struk-file" accept="image/*,.pdf" onchange="handleStrukUpload(event)">
@@ -2139,6 +2250,159 @@ table tbody tr:hover { background: #fafafa; }
 </div>
 
 <!-- Modal Rekening -->
+<!-- Modal Dompet -->
+<div class="modal-overlay" id="modalDompet">
+  <div class="modal">
+    <div class="modal-header" style="background:var(--purple)">
+      <h3>Tambah Dompet / E-Wallet</h3>
+      <button class="modal-close" onclick="closeModal('modalDompet')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dom-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nama Dompet *</label>
+          <input type="text" id="dom-nama" placeholder="Misal: Dana, OVO, Dompet Tunai...">
+        </div>
+        <div class="form-group">
+          <label>Tipe *</label>
+          <select id="dom-tipe">
+            <option value="tunai">💵 Tunai / Cash</option>
+            <option value="digital">📱 Dompet Digital (E-Wallet)</option>
+            <option value="bank">🏦 Rekening Bank</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ikon</label>
+          <select id="dom-icon">
+            <option value="💵">💵 Uang Tunai</option>
+            <option value="🔵">🔵 Dana</option>
+            <option value="🟣">🟣 OVO</option>
+            <option value="🟢">🟢 GoPay</option>
+            <option value="🟠">🟠 ShopeePay</option>
+            <option value="💙">💙 LinkAja</option>
+            <option value="🏦">🏦 Bank</option>
+            <option value="💳">💳 Kartu</option>
+            <option value="👛">👛 Dompet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Warna Kartu</label>
+          <input type="color" id="dom-warna" value="#9b59b6" style="height:38px;border-radius:4px;border:1px solid #ddd;width:100%;cursor:pointer;">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Saldo Awal (Rp)</label>
+          <input type="text" id="dom-saldo" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalDompet')" style="background:#eee;color:#555;">Batal</button>
+      <button class="btn" style="background:var(--purple);color:#fff;" onclick="saveDompet()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Transfer Antar Dompet -->
+<div class="modal-overlay" id="modalTransferDompet">
+  <div class="modal">
+    <div class="modal-header" style="background:var(--teal)">
+      <h3>🔄 Transfer Antar Dompet</h3>
+      <button class="modal-close" onclick="closeModal('modalTransferDompet')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Dari Dompet *</label>
+          <select id="tr-dom-dari" onchange="updateTransferInfo()"></select>
+        </div>
+        <div class="form-group">
+          <label>Ke Dompet *</label>
+          <select id="tr-dom-ke" onchange="updateTransferInfo()"></select>
+        </div>
+      </div>
+      <div id="transfer-saldo-info" style="background:#f0f9ff;border-radius:6px;padding:10px;margin-bottom:12px;font-size:12px;color:#555;display:none;">
+        <span id="tr-dom-dari-info"></span> → <span id="tr-dom-ke-info"></span>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nominal Transfer (Rp) *</label>
+          <input type="text" id="tr-dom-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+        </div>
+        <div class="form-group">
+          <label>Tanggal</label>
+          <input type="date" id="tr-dom-tgl">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Biaya Transfer (Rp)</label>
+          <input type="text" id="tr-dom-biaya" placeholder="0" inputmode="numeric" oninput="fmtInput(this)" value="0">
+        </div>
+        <div class="form-group">
+          <label>Keterangan</label>
+          <input type="text" id="tr-dom-ket" placeholder="Misal: Top up OVO dari BCA...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalTransferDompet')" style="background:#eee;color:#555;">Batal</button>
+      <button class="btn" style="background:var(--teal);color:#fff;" onclick="prosesTransferDompet()">🔄 Transfer Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Top Up / Tarik Dompet -->
+<div class="modal-overlay" id="modalTopUpDompet">
+  <div class="modal">
+    <div class="modal-header" style="background:var(--green)">
+      <h3 id="topup-modal-title">💰 Top Up / Tarik Dompet</h3>
+      <button class="modal-close" onclick="closeModal('modalTopUpDompet')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="topup-dom-id">
+      <div id="topup-dom-info" style="background:#f0fff4;border-radius:6px;padding:10px;margin-bottom:12px;font-size:13px;"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jenis *</label>
+          <select id="topup-jenis">
+            <option value="masuk">⬆️ Top Up / Terima Uang</option>
+            <option value="keluar">⬇️ Tarik / Bayar</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nominal (Rp) *</label>
+          <input type="text" id="topup-nominal" placeholder="0" inputmode="numeric" oninput="fmtInput(this)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="topup-kat"></select>
+        </div>
+        <div class="form-group">
+          <label>Tanggal</label>
+          <input type="date" id="topup-tgl">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Keterangan</label>
+          <input type="text" id="topup-ket" placeholder="Misal: Gaji bulan Maret, Beli makan...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalTopUpDompet')" style="background:#eee;color:#555;">Batal</button>
+      <button class="btn btn-success" onclick="prosesTopUpDompet()">💾 Simpan Transaksi</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalRekening">
   <div class="modal">
     <div class="modal-header">
@@ -2538,6 +2802,9 @@ table tbody tr:hover { background: #fafafa; }
   <div class="more-menu-item" onclick="navigateTo('hutang');closeMoreMenu()">
     <span class="mm-icon">💰</span> Hutang Piutang
   </div>
+  <div class="more-menu-item" onclick="navigateTo('dompet');closeMoreMenu()">
+    <span class="mm-icon">👛</span> Dompet & E-Wallet
+  </div>
   <div class="more-menu-item" onclick="navigateTo('pengguna');closeMoreMenu()">
     <span class="mm-icon">👥</span> Data Pengguna
   </div>
@@ -2604,7 +2871,14 @@ const DEFAULT_DATA = {
     {id:3, nama:'Gadget Baru', icon:'📱', target:3000000, tercapai:1500000},
     {id:4, nama:'Investasi', icon:'📈', target:20000000, tercapai:8000000},
   ],
-  nextId: {kat:7, tr:7, hp:4, rek:4, tg:5},
+  dompet: [
+    {id:1, nama:'Dompet Tunai', tipe:'tunai', icon:'💵', warna:'#27ae60', saldo:500000},
+    {id:2, nama:'Dana', tipe:'digital', icon:'🔵', warna:'#0066ff', saldo:200000},
+    {id:3, nama:'OVO', tipe:'digital', icon:'🟣', warna:'#4b0082', saldo:150000},
+    {id:4, nama:'GoPay', tipe:'digital', icon:'🟢', warna:'#00aa13', saldo:100000},
+    {id:5, nama:'ShopeePay', tipe:'digital', icon:'🟠', warna:'#ee4d2d', saldo:75000},
+  ],
+  nextId: {kat:7, tr:7, hp:4, rek:4, tg:5, dom:6},
   mutasi: [],
   profilePhoto: null,
   profile: {nama:'Wiki Ade Novit, S.E', email:'wiki.ade@keuangan.com', telp:'+62 812-XXXX-XXXX', jabatan:'Administrator', dept:'Keuangan & Akuntansi'},
@@ -2932,6 +3206,7 @@ function navigateTo(page) {
   if (page === 'target') renderTarget();
   if (page === 'pengguna') initPengguna();
   if (page === 'settings') initSettings();
+  if (page === 'dompet') renderDompet();
 
   // Sync bottom nav active state
   const bnavMap = {dashboard:0, transaksi:1, rekening:2, laporan:3};
@@ -3136,6 +3411,12 @@ function updateCards() {
     }
     el.textContent = fmtRp(total);
   });
+  // Update total semua dompet di dashboard jika ada
+  const domTotalEl = document.getElementById('dash-dom-total');
+  if (domTotalEl) {
+    const total = getAllDompet().reduce((s,d)=>s+d.saldo,0);
+    domTotalEl.textContent = fmtRpShort(total);
+  }
 }
 
 function setCardFilter(cardIndex, periode, btn) {
@@ -3484,6 +3765,7 @@ function renderTransaksi(filter) {
       <td>${t.ket||'-'}</td>
       <td><span class="badge ${bc}">${t.jenis}</span></td>
       <td style="font-weight:700;${nc}">${fmtRp(t.nominal)}</td>
+      <td style="font-size:11px">${t.sumberNama?`<span title="${t.sumberNama}">${t.sumberNama.length>12?t.sumberNama.slice(0,12)+'...':t.sumberNama}</span>`:'-'}</td>
       <td>${t.struk?`<button class="btn btn-sm btn-primary" onclick="viewStruk(${t.id})" title="${t.struk.name}">📎 Lihat</button>`:'<span class="badge badge-gray">-</span>'}</td>
       <td>
         <button class="btn btn-sm btn-primary" onclick="editTransaksi(${t.id})">✏️</button>
@@ -3524,15 +3806,38 @@ function saveTransaksi() {
   
   if (!tgl || !jenis || !nominal) return showToast('Tanggal, Jenis, dan Nominal wajib diisi!','red');
   
+  const sumberObj = sumberId ? getDompetById(sumberId) : null;
+  const sumberNama = sumberObj ? sumberObj.nama : '';
+
   if (editId) {
     const idx = store.transaksi.findIndex(t=>t.id==editId);
     const existing = store.transaksi[idx];
     store.transaksi[idx] = {...existing, tgl, jam, kat, jenis, ket, nominal,
-      struk: _pendingStruk || existing.struk};
+      struk: _pendingStruk || existing.struk,
+      sumberId: sumberId||existing.sumberId,
+      sumberNama: sumberNama||existing.sumberNama};
   } else {
     store.transaksi.push({id:store.nextId.tr++, tgl,
       jam: jam||new Date().toTimeString().slice(0,8),
-      kat, jenis, ket, nominal, struk: _pendingStruk||null});
+      kat, jenis, ket, nominal,
+      struk: _pendingStruk||null,
+      sumberId: sumberId||null,
+      sumberNama});
+    // Update dompet saldo
+    if (sumberId && sumberObj) {
+      const delta = jenis==='Pemasukan' ? nominal : jenis==='Pengeluaran' ? -nominal : 0;
+      if (delta !== 0) {
+        updateDompetSaldo(sumberId, delta);
+        const afterObj = getDompetById(sumberId);
+        if (!store.mutasi) store.mutasi = [];
+        store.mutasi.push({
+          id: Date.now(), tgl,
+          domId: sumberId, domNama: sumberNama,
+          ket: ket||kat, jenis: delta>0?'Kredit':'Debit',
+          nominal: Math.abs(delta), saldoSesudah: afterObj?.saldo||0,
+        });
+      }
+    }
   }
   _pendingStruk = null;
   
@@ -4150,6 +4455,334 @@ function lihatDetailCicilan(id) {
     </div>
   `;
   panel.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ===========================
+// DOMPET & E-WALLET
+// ===========================
+
+function getAllDompet() {
+  // Combine dompet digital/tunai with rekening bank
+  const doms = (store.dompet||[]).map(d => ({...d, _src:'dompet'}));
+  const reks = (store.rekening||[]).map(r => ({
+    id:'rek_'+r.id, nama:r.nama+' ('+r.bank+')', tipe:'bank',
+    icon:'🏦', warna:'#2980b9', saldo:r.saldo, _src:'rekening', _rekId:r.id
+  }));
+  return [...doms, ...reks];
+}
+
+function getDompetById(id) {
+  if (String(id).startsWith('rek_')) {
+    const rid = String(id).replace('rek_','');
+    const r = store.rekening.find(r=>r.id==rid);
+    if (!r) return null;
+    return {id:'rek_'+r.id, nama:r.nama+' ('+r.bank+')', tipe:'bank', icon:'🏦', warna:'#2980b9', saldo:r.saldo, _src:'rekening', _rekId:r.id};
+  }
+  return (store.dompet||[]).find(d=>d.id==id);
+}
+
+function updateDompetSaldo(id, delta) {
+  if (String(id).startsWith('rek_')) {
+    const rid = String(id).replace('rek_','');
+    const r = store.rekening.find(r=>r.id==rid);
+    if (r) r.saldo += delta;
+  } else {
+    const d = (store.dompet||[]).find(d=>d.id==id);
+    if (d) d.saldo += delta;
+  }
+}
+
+function renderDompet() {
+  if (!store.dompet) store.dompet = [];
+  const grid = document.getElementById('dompet-grid');
+  if (!grid) return;
+
+  // Totals
+  const allDom = getAllDompet();
+  const totalAll = allDom.reduce((s,d)=>s+d.saldo,0);
+  const totalTunai = allDom.filter(d=>d.tipe==='tunai').reduce((s,d)=>s+d.saldo,0);
+  const totalDigital = allDom.filter(d=>d.tipe==='digital').reduce((s,d)=>s+d.saldo,0);
+  const totalBank = allDom.filter(d=>d.tipe==='bank').reduce((s,d)=>s+d.saldo,0);
+
+  const setEl = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=fmtRpShort(v); };
+  setEl('dom-total-all', totalAll);
+  setEl('dom-total-tunai', totalTunai);
+  setEl('dom-total-digital', totalDigital);
+  setEl('dom-total-bank', totalBank);
+
+  // Render cards - dompet only (rekening shown separately)
+  grid.innerHTML = '';
+  store.dompet.forEach(d => {
+    grid.innerHTML += `
+    <div class="dompet-card" style="background:${d.warna}" onclick="bukaTopUpDompet(${d.id})">
+      <div class="dc-actions">
+        <button class="dc-action-btn" onclick="event.stopPropagation();editDompet(${d.id})" title="Edit">✏️</button>
+        <button class="dc-action-btn" onclick="event.stopPropagation();deleteDompet(${d.id})" title="Hapus">🗑️</button>
+      </div>
+      <div class="dc-icon">${d.icon}</div>
+      <div class="dc-nama">${d.nama}</div>
+      <div class="dc-saldo">${fmtRp(d.saldo)}</div>
+      <div class="dc-tipe">${d.tipe === 'tunai' ? '💵 Tunai' : '📱 E-Wallet'}</div>
+    </div>`;
+  });
+
+  // Update filter dropdown
+  const filterSel = document.getElementById('filter-dom-mutasi');
+  if (filterSel) {
+    const curVal = filterSel.value;
+    filterSel.innerHTML = '<option value="">Semua Dompet</option>';
+    allDom.forEach(d => {
+      filterSel.innerHTML += `<option value="${d.id}" ${curVal==d.id?'selected':''}>${d.nama}</option>`;
+    });
+  }
+
+  renderDompetMutasi();
+}
+
+function renderDompetMutasi() {
+  const tbody = document.getElementById('tbody-dom-mutasi');
+  if (!tbody) return;
+  const filterDomId = document.getElementById('filter-dom-mutasi')?.value;
+
+  // Get dompet mutasi from store.mutasi filtered by non-rekening
+  let data = [...(store.mutasi||[])].filter(m => m.domId !== undefined || !m.rekId)
+    .sort((a,b) => b.tgl?.localeCompare(a.tgl)||b.id-a.id).slice(0,30);
+  if (filterDomId) data = data.filter(m => String(m.domId||m.rekId) === String(filterDomId) || String('rek_'+(m.rekId||'')) === String(filterDomId));
+
+  tbody.innerHTML = '';
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px;">Belum ada mutasi dompet</td></tr>';
+    return;
+  }
+  data.forEach(m => {
+    const isDebit = m.jenis === 'Debit';
+    tbody.innerHTML += `<tr>
+      <td style="font-size:11px">${fmtDate(m.tgl)}</td>
+      <td><strong>${m.domNama||m.rekNama||'-'}</strong></td>
+      <td>${m.ket}</td>
+      <td><span class="badge ${isDebit?'badge-danger':'badge-success'}">${isDebit?'⬇ Keluar':'⬆ Masuk'}</span></td>
+      <td style="color:${isDebit?'var(--red)':'var(--green)'};font-weight:700">${isDebit?'-':'+'} ${fmtRp(m.nominal)}</td>
+      <td style="font-size:12px;color:var(--blue)">${fmtRp(m.saldoSesudah||0)}</td>
+    </tr>`;
+  });
+}
+
+function saveDompet() {
+  const nama = document.getElementById('dom-nama').value.trim();
+  const tipe = document.getElementById('dom-tipe').value;
+  const icon = document.getElementById('dom-icon').value;
+  const warna = document.getElementById('dom-warna').value;
+  const saldo = getRawNum('dom-saldo');
+  const editId = document.getElementById('dom-edit-id').value;
+
+  if (!nama) return showToast('Nama dompet wajib diisi!','red');
+  if (!store.dompet) store.dompet = [];
+
+  if (editId) {
+    const idx = store.dompet.findIndex(d=>d.id==editId);
+    store.dompet[idx] = {...store.dompet[idx], nama, tipe, icon, warna, saldo};
+  } else {
+    if (!store.nextId.dom) store.nextId.dom = 6;
+    store.dompet.push({id: store.nextId.dom++, nama, tipe, icon, warna, saldo});
+  }
+
+  saveStore();
+  closeModal('modalDompet');
+  renderDompet();
+  showToast('Dompet berhasil disimpan!');
+}
+
+function editDompet(id) {
+  const d = store.dompet.find(d=>d.id===id);
+  document.getElementById('dom-edit-id').value = id;
+  document.getElementById('dom-nama').value = d.nama;
+  document.getElementById('dom-tipe').value = d.tipe;
+  document.getElementById('dom-icon').value = d.icon;
+  document.getElementById('dom-warna').value = d.warna;
+  setFmtInput('dom-saldo', d.saldo);
+  openModal('modalDompet','Edit Dompet');
+}
+
+function deleteDompet(id) {
+  if (!confirm('Hapus dompet ini?')) return;
+  store.dompet = store.dompet.filter(d=>d.id!==id);
+  saveStore();
+  renderDompet();
+  showToast('Dompet dihapus!','red');
+}
+
+function bukaTopUpDompet(id) {
+  const d = getDompetById(id);
+  if (!d) return;
+  document.getElementById('topup-dom-id').value = id;
+  document.getElementById('topup-dom-info').innerHTML = `
+    <strong>${d.icon} ${d.nama}</strong><br>
+    Saldo saat ini: <strong style="color:var(--green)">${fmtRp(d.saldo)}</strong>`;
+  document.getElementById('topup-tgl').value = today();
+
+  // Populate kategori
+  const kat = document.getElementById('topup-kat');
+  kat.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+  store.kategori.forEach(k => kat.innerHTML += `<option value="${k.nama}">${k.icon||'💰'} ${k.nama}</option>`);
+
+  openModal('modalTopUpDompet', `💰 ${d.nama}`);
+}
+
+function prosesTopUpDompet() {
+  const id = document.getElementById('topup-dom-id').value;
+  const jenis = document.getElementById('topup-jenis').value;
+  const nominal = getRawNum('topup-nominal');
+  const kat = document.getElementById('topup-kat').value;
+  const tgl = document.getElementById('topup-tgl').value || today();
+  const ket = document.getElementById('topup-ket').value.trim();
+
+  if (!nominal) return showToast('Nominal wajib diisi!','red');
+
+  const d = getDompetById(id);
+  if (!d) return;
+
+  // Validate saldo for keluar
+  if (jenis === 'keluar' && d.saldo < nominal) {
+    return showToast(`Saldo ${d.nama} tidak cukup! Saldo: ${fmtRpShort(d.saldo)}`, 'red');
+  }
+
+  const delta = jenis === 'masuk' ? nominal : -nominal;
+  updateDompetSaldo(id, delta);
+
+  // Saldo sesudah
+  const dAfter = getDompetById(id);
+  const saldoSesudah = dAfter ? dAfter.saldo : 0;
+
+  // Catat transaksi
+  store.transaksi.push({
+    id: store.nextId.tr++, tgl,
+    jam: new Date().toTimeString().slice(0,8),
+    kat: kat || (jenis==='masuk'?'Pemasukan':'Pengeluaran'),
+    ket: ket || (jenis==='masuk'?`Terima uang - ${d.nama}`:`Bayar - ${d.nama}`),
+    jenis: jenis === 'masuk' ? 'Pemasukan' : 'Pengeluaran',
+    nominal, struk: null,
+    sumberId: id, sumberNama: d.nama,
+  });
+
+  // Catat mutasi dompet
+  if (!store.mutasi) store.mutasi = [];
+  store.mutasi.push({
+    id: Date.now(), tgl,
+    domId: id, domNama: d.nama,
+    ket: ket || (jenis==='masuk'?'Top Up / Terima':'Bayar / Tarik'),
+    jenis: jenis === 'masuk' ? 'Kredit' : 'Debit',
+    nominal, saldoSesudah,
+  });
+
+  saveStore();
+  closeModal('modalTopUpDompet');
+  renderDompet();
+  renderTransaksi();
+  showToast(`✅ ${jenis==='masuk'?'+':'−'} ${fmtRpShort(nominal)} ${jenis==='masuk'?'masuk ke':'keluar dari'} ${d.nama}`);
+}
+
+function updateTransferInfo() {
+  const dariId = document.getElementById('tr-dom-dari')?.value;
+  const keId = document.getElementById('tr-dom-ke')?.value;
+  const infoEl = document.getElementById('transfer-saldo-info');
+  if (!dariId || !keId) { if(infoEl) infoEl.style.display='none'; return; }
+
+  const dari = getDompetById(dariId);
+  const ke = getDompetById(keId);
+  if (!dari || !ke) return;
+
+  if (infoEl) {
+    infoEl.style.display = 'block';
+    document.getElementById('tr-dom-dari-info').textContent = `${dari.icon} ${dari.nama}: ${fmtRpShort(dari.saldo)}`;
+    document.getElementById('tr-dom-ke-info').textContent = `${ke.icon} ${ke.nama}: ${fmtRpShort(ke.saldo)}`;
+  }
+}
+
+function prosesTransferDompet() {
+  const dariId = document.getElementById('tr-dom-dari').value;
+  const keId = document.getElementById('tr-dom-ke').value;
+  const nominal = getRawNum('tr-dom-nominal');
+  const biaya = getRawNum('tr-dom-biaya');
+  const tgl = document.getElementById('tr-dom-tgl').value || today();
+  const ket = document.getElementById('tr-dom-ket').value.trim();
+
+  if (!dariId || !keId) return showToast('Pilih asal dan tujuan dompet!','red');
+  if (dariId === keId) return showToast('Asal dan tujuan tidak boleh sama!','red');
+  if (!nominal) return showToast('Nominal wajib diisi!','red');
+
+  const dari = getDompetById(dariId);
+  const ke = getDompetById(keId);
+  if (!dari || !ke) return;
+
+  const totalKeluar = nominal + biaya;
+  if (dari.saldo < totalKeluar) {
+    return showToast(`Saldo ${dari.nama} tidak cukup! Saldo: ${fmtRpShort(dari.saldo)}`, 'red');
+  }
+
+  // Update saldo
+  updateDompetSaldo(dariId, -totalKeluar);
+  updateDompetSaldo(keId, nominal);
+
+  const dariAfter = getDompetById(dariId);
+  const keAfter = getDompetById(keId);
+
+  // Catat transaksi transfer
+  const ketFinal = ket || `Transfer ${dari.nama} → ${ke.nama}`;
+  store.transaksi.push({
+    id: store.nextId.tr++, tgl,
+    jam: new Date().toTimeString().slice(0,8),
+    kat: 'Transfer', ket: ketFinal,
+    jenis: 'Pengeluaran', nominal,
+    struk: null, sumberId: dariId, sumberNama: dari.nama,
+  });
+
+  // Catat mutasi
+  if (!store.mutasi) store.mutasi = [];
+  store.mutasi.push({
+    id: Date.now(), tgl, domId: dariId, domNama: dari.nama,
+    ket: ketFinal, jenis: 'Debit', nominal: totalKeluar, saldoSesudah: dariAfter?.saldo||0,
+  });
+  store.mutasi.push({
+    id: Date.now()+1, tgl, domId: keId, domNama: ke.nama,
+    ket: ketFinal, jenis: 'Kredit', nominal, saldoSesudah: keAfter?.saldo||0,
+  });
+
+  if (biaya > 0) {
+    store.transaksi.push({
+      id: store.nextId.tr++, tgl,
+      jam: new Date().toTimeString().slice(0,8),
+      kat: 'Biaya Transfer', ket: `Biaya transfer ${dari.nama} → ${ke.nama}`,
+      jenis: 'Pengeluaran', nominal: biaya, struk: null,
+    });
+  }
+
+  saveStore();
+  closeModal('modalTransferDompet');
+  renderDompet();
+  renderTransaksi();
+  showToast(`✅ Transfer ${fmtRpShort(nominal)} dari ${dari.nama} ke ${ke.nama} berhasil!`);
+}
+
+// Populate dompet dropdown in transaksi modal
+function populateSumberDana() {
+  const sel = document.getElementById('tr-sumber');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- Pilih Dompet/Rekening (Opsional) --</option>';
+  getAllDompet().forEach(d => {
+    sel.innerHTML += `<option value="${d.id}" ${cur==d.id?'selected':''}>${d.icon} ${d.nama} — ${fmtRpShort(d.saldo)}</option>`;
+  });
+}
+
+function updateSumberInfo() {
+  const id = document.getElementById('tr-sumber')?.value;
+  const infoEl = document.getElementById('tr-sumber-info');
+  if (!id) { if(infoEl) infoEl.style.display='none'; return; }
+  const d = getDompetById(id);
+  if (d && infoEl) {
+    infoEl.style.display = 'block';
+    infoEl.textContent = `${d.icon} ${d.nama} — Saldo: ${fmtRp(d.saldo)}`;
+  }
 }
 
 // ===========================
@@ -4893,6 +5526,23 @@ function openModal(id, title) {
     if (isNew) document.getElementById('atm-tgl').value = today();
     switchATMTab('manual');
     updateATMBiaya();
+  }
+
+  // Populate sumber dana in transaksi modal
+  if (id === 'modalTransaksi') {
+    populateSumberDana();
+  }
+
+  // Populate dompet selects in transfer modal
+  if (id === 'modalTransferDompet') {
+    const allDom = getAllDompet();
+    ['tr-dom-dari','tr-dom-ke'].forEach(selId => {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Pilih Dompet --</option>';
+      allDom.forEach(d => sel.innerHTML += `<option value="${d.id}">${d.icon} ${d.nama} — ${fmtRpShort(d.saldo)}</option>`);
+    });
+    if (isNew) document.getElementById('tr-dom-tgl').value = today();
   }
 }
 
