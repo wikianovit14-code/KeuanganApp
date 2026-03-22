@@ -3934,14 +3934,16 @@ function saveTransaksi() {
     store.transaksi[idx] = {...existing, tgl, jam, kat, jenis, ket, nominal,
       struk: _pendingStruk || existing.struk,
       sumberId: sumberId||existing.sumberId,
-      sumberNama: sumberNama||existing.sumberNama};
+      sumberNama: sumberNama||existing.sumberNama,
+      targetId: jenis==='Tabungan' ? (targetId||existing.targetId||'') : ''};
   } else {
     store.transaksi.push({id:store.nextId.tr++, tgl,
       jam: jam||new Date().toTimeString().slice(0,8),
       kat, jenis, ket, nominal,
       struk: _pendingStruk||null,
       sumberId: sumberId||null,
-      sumberNama});
+      sumberNama,
+      targetId: jenis==='Tabungan' ? targetId : ''});
     // Update dompet saldo
     if (sumberId && sumberObj) {
       const delta = jenis==='Pemasukan' ? nominal : jenis==='Pengeluaran' ? -nominal : 0;
@@ -4003,7 +4005,17 @@ function editTransaksi(id) {
   setFmtInput('tr-nominal', t.nominal);
   // Set kategori
   renderTransaksi();
-  setTimeout(()=>{document.getElementById('tr-kategori').value = t.kat;},50);
+  setTimeout(()=>{
+    document.getElementById('tr-kategori').value = t.kat;
+    // Populate sumber dana
+    populateSumberDana();
+    if (t.sumberId) document.getElementById('tr-sumber').value = t.sumberId;
+    // Show target field if Tabungan + set saved target
+    toggleTargetField();
+    if (t.jenis === 'Tabungan' && t.targetId) {
+      setTimeout(()=>{ document.getElementById('tr-target-id').value = t.targetId; }, 50);
+    }
+  }, 50);
   openModal('modalTransaksi','Edit Transaksi');
 }
 
@@ -5702,8 +5714,9 @@ function openModal(id, title) {
     store.kategori.forEach(k => {
       sel.innerHTML += `<option value="${k.nama}">${k.nama}</option>`;
     });
-    // Reset color
+    // Reset color + target field
     updateTransaksiColor();
+    toggleTargetField();
   }
 
   // Populate rekening in ATM modal
