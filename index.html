@@ -6048,12 +6048,23 @@ function initSettings() {
     const sizeKB = (size/1024).toFixed(1);
     const sizePct = (size/(5*1024*1024)*100).toFixed(2);
     const trCount = store.transaksi.length;
-    const estMax = Math.floor(5*1024*1024 / (size/Math.max(trCount,1)));
+
+    // Hitung ukuran 1 transaksi rata-rata (tanpa foto/base64)
+    const sampleTr = store.transaksi.slice(0,5);
+    const trSize = sampleTr.length > 0
+      ? JSON.stringify(sampleTr.map(t=>({...t, struk:null}))).length / sampleTr.length
+      : 300; // default ~300 bytes per transaksi
+    // Estimasi maks berdasarkan sisa storage & ukuran per transaksi
+    const usedByOther = JSON.stringify({...store, transaksi:[], mutasi:[]}).length;
+    const availableForTr = Math.max(0, 5*1024*1024 - usedByOther);
+    const estMax = Math.floor(availableForTr / trSize);
+
     document.getElementById('storage-info').innerHTML =
       `📦 Storage lokal: <strong>${sizeKB} KB</strong> dari 5.000 KB (${sizePct}%)<br>` +
-      `📋 Transaksi: <strong>${trCount}</strong> dari estimasi maks ~<strong>${estMax.toLocaleString('id-ID')}</strong><br>` +
-      `🔥 Firebase: <strong>${fbEnabled?'Terhubung (1 GB cloud)':'Tidak terhubung'}</strong><br>` +
-      `💡 Tips: Hapus foto struk lama untuk hemat storage`;
+      `📋 Transaksi tersimpan: <strong>${trCount.toLocaleString('id-ID')}</strong><br>` +
+      `📈 Estimasi maks transaksi (tanpa foto): ~<strong>${estMax.toLocaleString('id-ID')}</strong><br>` +
+      `🔥 Firebase: <strong>${fbEnabled?'✅ Terhubung (1 GB cloud, ~2 juta transaksi)':'❌ Tidak terhubung'}</strong><br>` +
+      `💡 Tips: Dengan Firebase aktif, batas praktisnya <strong>tidak terbatas</strong> untuk pemakaian seumur hidup`;
   } catch(e) {}
   // Stats
   const ttr = document.getElementById('info-total-tr');
