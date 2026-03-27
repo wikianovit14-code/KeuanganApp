@@ -4627,20 +4627,36 @@ function saveTransaksi() {
       sumberNama,
       targetId: jenis==='Tabungan' ? targetId : ''});
 
-    // Update dompet saldo
-    if (sumberId && sumberObj) {
-      // Pemasukan = +saldo, Pengeluaran = -saldo, Tabungan = -saldo (uang keluar ke tabungan)
+    // Update saldo sumber dana (rekening atau dompet)
+    if (sumberId) {
       const delta = jenis==='Pemasukan' ? nominal : (jenis==='Pengeluaran'||jenis==='Tabungan') ? -nominal : 0;
       if (delta !== 0) {
         updateDompetSaldo(sumberId, delta);
+        // Ambil saldo terbaru setelah update
         const afterObj = getDompetById(sumberId);
+        const saldoSesudah = afterObj?.saldo || 0;
         if (!store.mutasi) store.mutasi = [];
-        store.mutasi.push({
-          id: Date.now(), tgl,
-          domId: sumberId, domNama: sumberNama,
-          ket: ket||kat, jenis: delta>0?'Kredit':'Debit',
-          nominal: Math.abs(delta), saldoSesudah: afterObj?.saldo||0,
-        });
+
+        const isRekening = String(sumberId).startsWith('rek_');
+        if (isRekening) {
+          // Simpan ke mutasi rekening
+          const rid = String(sumberId).replace('rek_','');
+          const rek = store.rekening.find(r=>r.id==rid);
+          store.mutasi.push({
+            id: Date.now(), tgl,
+            rekId: rek?.id, rekNama: sumberNama,
+            ket: ket||kat, jenis: delta>0?'Kredit':'Debit',
+            nominal: Math.abs(delta), saldoSesudah,
+          });
+        } else {
+          // Simpan ke mutasi dompet
+          store.mutasi.push({
+            id: Date.now(), tgl,
+            domId: sumberId, domNama: sumberNama,
+            ket: ket||kat, jenis: delta>0?'Kredit':'Debit',
+            nominal: Math.abs(delta), saldoSesudah,
+          });
+        }
       }
     }
 
@@ -4654,8 +4670,9 @@ function saveTransaksi() {
   saveStore();
   closeModal('modalTransaksi');
   renderTransaksi();
-  // Update dompet page if open
+  // Update halaman terkait jika sedang terbuka
   if (document.getElementById('page-dompet')?.classList.contains('active')) renderDompet();
+  if (document.getElementById('page-rekening')?.classList.contains('active')) renderRekening();
   showToast(editId ? 'Transaksi berhasil diupdate!' : 'Transaksi berhasil ditambahkan!');
 }
 
@@ -5786,20 +5803,49 @@ function populateSumberDana() {
   const sel = document.getElementById('tr-sumber');
   if (!sel) return;
   const cur = sel.value;
-  sel.innerHTML = '<option value="">-- Pilih Dompet/Rekening (Opsional) --</option>';
-  getAllDompet().forEach(d => {
-    sel.innerHTML += `<option value="${d.id}" ${cur==d.id?'selected':''}>${d.icon} ${d.nama} — ${fmtRpShort(d.saldo)}</option>`;
-  });
+  sel.innerHTML = '<option value="">-- Pilih Sumber / Tujuan Dana (Opsional) --</option>';
+
+  // Group: Rekening Bank
+  const reks = store.rekening || [];
+  if (reks.length > 0) {
+    sel.innerHTML += '<optgroup label="🏦 Rekening Bank">';
+    reks.forEach(r => {
+      const id = 'rek_' + r.id;
+      sel.innerHTML += `<option value="${id}" ${cur==id?'selected':''}>🏦 ${r.nama} (${r.bank}) — ${fmtRpShort(r.saldo)}</option>`;
+    });
+    sel.innerHTML += '</optgroup>';
+  }
+
+  // Group: Dompet Digital & Tunai
+  const doms = store.dompet || [];
+  if (doms.length > 0) {
+    sel.innerHTML += '<optgroup label="👛 Dompet & E-Wallet">';
+    doms.forEach(d => {
+      sel.innerHTML += `<option value="${d.id}" ${cur==d.id?'selected':''}>${d.icon} ${d.nama} — ${fmtRpShort(d.saldo)}</option>`;
+    });
+    sel.innerHTML += '</optgroup>';
+  }
 }
 
 function updateSumberInfo() {
   const id = document.getElementById('tr-sumber')?.value;
   const infoEl = document.getElementById('tr-sumber-info');
   if (!id) { if(infoEl) infoEl.style.display='none'; return; }
-  const d = getDompetById(id);
-  if (d && infoEl) {
+
+  let nama = '', saldo = 0, icon = '';
+  if (String(id).startsWith('rek_')) {
+    const rid = String(id).replace('rek_','');
+    const r = store.rekening.find(r=>r.id==rid);
+    if (r) { nama = `${r.nama} (${r.bank})`; saldo = r.saldo; icon = '🏦'; }
+  } else {
+    const d = (store.dompet||[]).find(d=>d.id==id);
+    if (d) { nama = d.nama; saldo = d.saldo; icon = d.icon; }
+  }
+
+  if (nama && infoEl) {
+    const color = saldo > 0 ? 'var(--green)' : 'var(--red)';
     infoEl.style.display = 'block';
-    infoEl.textContent = `${d.icon} ${d.nama} — Saldo: ${fmtRp(d.saldo)}`;
+    infoEl.innerHTML = `${icon} <strong>${nama}</strong> — Saldo: <strong style="color:${color}">${fmtRp(saldo)}</strong>`;
   }
 }
 
