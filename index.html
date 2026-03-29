@@ -1331,134 +1331,158 @@ table tbody tr:hover { background: #fafafa; }
       </div>
 
       <!-- Summary Cards -->
-      <div class="cards-grid">
-        <!-- Pemasukan Hari Ini -->
+      <!-- BARIS 1: Pemasukan (4 kolom) -->
+      <div class="cards-grid" style="margin-bottom:10px;">
+        <!-- Pemasukan Hari Ini - Hijau -->
         <div class="summary-card" style="background:var(--green)">
           <div class="card-icon">📊</div>
           <div class="card-value" id="card-masuk-hari">Rp. 0 ,-</div>
           <div class="card-label" id="lbl-masuk-hari">Pemasukan Hari Ini</div>
-          <div class="card-footer">
-            <button class="filter-btn active" onclick="setCardFilter(0,'hari',this)">Per Hari</button>
-            <button class="filter-btn" onclick="setCardFilter(0,'minggu',this)">Per Minggu</button>
-            <button class="filter-btn" onclick="setCardFilter(0,'bulan',this)">Per Bulan</button>
-            <button class="filter-btn" onclick="setCardFilter(0,'tahun',this)">Per Tahun</button>
+          <div class="card-footer" style="justify-content:flex-start;">
+            <input type="date" id="filter-masuk-hari-tgl" 
+              style="font-size:9px;padding:2px 4px;border:none;border-radius:3px;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;"
+              onchange="setCardCustomDate(0,this.value)">
           </div>
         </div>
-        <!-- Pemasukan Bulan Ini -->
+        <!-- Pemasukan Minggu Ini - Biru -->
         <div class="summary-card" style="background:var(--blue)">
+          <div class="card-icon">📊</div>
+          <div class="card-value" id="card-masuk-minggu">Rp. 0 ,-</div>
+          <div class="card-label" id="lbl-masuk-minggu">Pemasukan Minggu Ini</div>
+          <div class="card-footer" style="font-size:9px;opacity:.7;justify-content:flex-start;">
+            <span id="lbl-minggu-range"></span>
+          </div>
+        </div>
+        <!-- Pemasukan Bulan Ini - Orange -->
+        <div class="summary-card" style="background:var(--orange)">
           <div class="card-icon">📊</div>
           <div class="card-value" id="card-masuk-bulan">Rp. 0 ,-</div>
           <div class="card-label" id="lbl-masuk-bulan">Pemasukan Bulan Ini</div>
-          <div class="card-footer">
-            <button class="filter-btn active" onclick="setCardFilter(1,'hari',this)">Per Hari</button>
-            <button class="filter-btn" onclick="setCardFilter(1,'minggu',this)">Per Minggu</button>
-            <button class="filter-btn" onclick="setCardFilter(1,'bulan',this)">Per Bulan</button>
-            <button class="filter-btn" onclick="setCardFilter(1,'tahun',this)">Per Tahun</button>
+          <div class="card-footer" style="font-size:9px;opacity:.7;justify-content:flex-start;">
+            <span id="lbl-bulan-name"></span>
           </div>
         </div>
-        <!-- Pemasukan Tahun Ini -->
-        <div class="summary-card" style="background:var(--orange)">
+        <!-- Pemasukan Tahun Ini - Pink #ed3572 -->
+        <div class="summary-card" style="background:#ed3572">
           <div class="card-icon">📊</div>
           <div class="card-value" id="card-masuk-tahun">Rp. 0 ,-</div>
           <div class="card-label" id="lbl-masuk-tahun">Pemasukan Tahun Ini</div>
-          <div class="card-footer">
-            <button class="filter-btn active" onclick="setCardFilter(2,'hari',this)">Per Hari</button>
-            <button class="filter-btn" onclick="setCardFilter(2,'minggu',this)">Per Minggu</button>
-            <button class="filter-btn" onclick="setCardFilter(2,'bulan',this)">Per Bulan</button>
-            <button class="filter-btn" onclick="setCardFilter(2,'tahun',this)">Per Tahun</button>
+          <div class="card-footer" style="font-size:9px;opacity:.7;justify-content:flex-start;">
+            <span id="lbl-tahun-name"></span>
           </div>
         </div>
-        <!-- Total Saldo Semua Dompet -->
-        <div class="summary-card" style="background:var(--black-card);cursor:pointer;" onclick="navigateTo('dompet')">
-          <div class="card-icon" style="opacity:.5;font-size:28px;">💰</div>
-          <div class="card-label" style="opacity:.65;margin-bottom:8px;font-size:11px;letter-spacing:.5px;">TOTAL SALDO SAAT INI</div>
-          <div id="dash-total-saldo" style="font-size:22px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#fff;letter-spacing:.5px;margin-bottom:10px;">Rp. 0</div>
-          <div style="border-top:1px solid rgba(255,255,255,.12);padding-top:8px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-              <span style="font-size:10px;color:rgba(255,255,255,.55);">💵 Cash / Tunai</span>
-              <span id="dash-saldo-tunai" style="font-size:11px;font-weight:700;color:#7dcea0;">Rp. 0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-              <span style="font-size:10px;color:rgba(255,255,255,.55);">📱 E-Wallet</span>
-              <span id="dash-saldo-ewallet" style="font-size:11px;font-weight:700;color:#a29bfe;">Rp. 0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;">
-              <span style="font-size:10px;color:rgba(255,255,255,.55);">🏦 Rekening Bank</span>
-              <span id="dash-saldo-bank" style="font-size:11px;font-weight:700;color:#74b9ff;">Rp. 0</span>
-            </div>
-          </div>
-          <div style="margin-top:6px;font-size:9px;opacity:.35;text-align:center;">Klik untuk lihat detail →</div>
-        </div>
-        <!-- Pengeluaran Hari Ini -->
+      </div>
+
+      <!-- BARIS 2: Pengeluaran (4 kolom) -->
+      <div class="cards-grid" style="margin-bottom:10px;">
+        <!-- Pengeluaran Hari Ini - Merah -->
         <div class="summary-card" style="background:var(--red)">
           <div class="card-icon">💸</div>
           <div class="card-value" id="card-keluar-hari">Rp. 0 ,-</div>
           <div class="card-label">Pengeluaran Hari Ini</div>
-          <div class="card-footer">
-            <button class="filter-btn active" onclick="setCardFilter(4,'hari',this)">Per Hari</button>
-            <button class="filter-btn" onclick="setCardFilter(4,'minggu',this)">Per Minggu</button>
-            <button class="filter-btn" onclick="setCardFilter(4,'bulan',this)">Per Bulan</button>
-            <button class="filter-btn" onclick="setCardFilter(4,'tahun',this)">Per Tahun</button>
+          <div class="card-footer" style="justify-content:flex-start;">
+            <input type="date" id="filter-keluar-hari-tgl"
+              style="font-size:9px;padding:2px 4px;border:none;border-radius:3px;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;"
+              onchange="setCardCustomDate(4,this.value)">
           </div>
         </div>
-        <!-- Pengeluaran Bulan Ini -->
+        <!-- Pengeluaran Minggu Ini - Merah gelap -->
+        <div class="summary-card" style="background:#c0392b">
+          <div class="card-icon">💸</div>
+          <div class="card-value" id="card-keluar-minggu">Rp. 0 ,-</div>
+          <div class="card-label">Pengeluaran Minggu Ini</div>
+          <div class="card-footer" style="font-size:9px;opacity:.7;justify-content:flex-start;">
+            <span>7 hari terakhir</span>
+          </div>
+        </div>
+        <!-- Pengeluaran Bulan Ini - Merah -->
         <div class="summary-card" style="background:var(--red)">
           <div class="card-icon">💸</div>
           <div class="card-value" id="card-keluar-bulan">Rp. 0 ,-</div>
           <div class="card-label">Pengeluaran Bulan Ini</div>
-          <div class="card-footer">
-            <button class="filter-btn active" onclick="setCardFilter(5,'hari',this)">Per Hari</button>
-            <button class="filter-btn" onclick="setCardFilter(5,'minggu',this)">Per Minggu</button>
-            <button class="filter-btn" onclick="setCardFilter(5,'bulan',this)">Per Bulan</button>
-            <button class="filter-btn" onclick="setCardFilter(5,'tahun',this)">Per Tahun</button>
+          <div class="card-footer" style="font-size:9px;opacity:.7;justify-content:flex-start;">
+            <span id="lbl-bulan-keluar"></span>
           </div>
         </div>
-        <!-- Pengeluaran Tahun Ini -->
-        <div class="summary-card" style="background:var(--red)">
+        <!-- Pengeluaran Tahun Ini - Merah gelap -->
+        <div class="summary-card" style="background:#c0392b">
           <div class="card-icon">💸</div>
           <div class="card-value" id="card-keluar-tahun">Rp. 0 ,-</div>
           <div class="card-label">Pengeluaran Tahun Ini</div>
-          <div class="card-footer">
-            <button class="filter-btn active" onclick="setCardFilter(6,'hari',this)">Per Hari</button>
-            <button class="filter-btn" onclick="setCardFilter(6,'minggu',this)">Per Minggu</button>
-            <button class="filter-btn" onclick="setCardFilter(6,'bulan',this)">Per Bulan</button>
-            <button class="filter-btn" onclick="setCardFilter(6,'tahun',this)">Per Tahun</button>
+          <div class="card-footer" style="font-size:9px;opacity:.7;justify-content:flex-start;">
+            <span id="lbl-tahun-keluar"></span>
           </div>
         </div>
+      </div>
+
+      <!-- BARIS 3: Total Saldo + Notifikasi + Ringkasan -->
+      <div class="cards-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:10px;">
+        <!-- Total Saldo -->
+        <div class="summary-card" style="background:var(--black-card);cursor:pointer;" onclick="navigateTo('dompet')">
+          <div class="card-icon" style="opacity:.5;font-size:24px;">💰</div>
+          <div class="card-label" style="opacity:.65;margin-bottom:6px;font-size:10px;letter-spacing:.5px;">TOTAL SALDO SAAT INI</div>
+          <div id="dash-total-saldo" style="font-size:20px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#fff;letter-spacing:.5px;margin-bottom:8px;">Rp. 0</div>
+          <div style="border-top:1px solid rgba(255,255,255,.12);padding-top:6px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:10px;color:rgba(255,255,255,.55);">💵 Tunai</span>
+              <span id="dash-saldo-tunai" style="font-size:11px;font-weight:700;color:#7dcea0;">Rp. 0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:10px;color:rgba(255,255,255,.55);">📱 E-Wallet</span>
+              <span id="dash-saldo-ewallet" style="font-size:11px;font-weight:700;color:#a29bfe;">Rp. 0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:10px;color:rgba(255,255,255,.55);">🏦 Bank</span>
+              <span id="dash-saldo-bank" style="font-size:11px;font-weight:700;color:#74b9ff;">Rp. 0</span>
+            </div>
+          </div>
+          <div style="margin-top:4px;font-size:9px;opacity:.3;text-align:center;">Klik detail →</div>
+        </div>
+
+        <!-- Notifikasi Penting -->
+        <div class="summary-card" style="background:#2c3e50;cursor:default;overflow-y:auto;max-height:200px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="card-label" style="opacity:.65;font-size:10px;letter-spacing:.5px;margin:0;">🔔 NOTIFIKASI PENTING</div>
+            <span id="notif-badge" style="background:var(--red);color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;display:none;">!</span>
+          </div>
+          <div id="dash-notif-list" style="font-size:11px;line-height:1.6;">
+            <div style="color:rgba(255,255,255,.4);font-size:11px;">Tidak ada notifikasi</div>
+          </div>
+        </div>
+
         <!-- Ringkasan + Filter Tahun -->
         <div class="summary-card" style="background:var(--black-card);cursor:default;">
-          <!-- Filter tahun compact di atas -->
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-            <span style="font-size:10px;opacity:.5;white-space:nowrap;">📅 Tahun:</span>
+            <span style="font-size:10px;opacity:.5;white-space:nowrap;">📅</span>
             <select id="dash-year-select" onchange="setDashYearFilter(this.value?parseInt(this.value):null)"
               style="flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
-                     color:#fff;border-radius:5px;padding:5px 8px;font-size:12px;font-weight:700;
+                     color:#fff;border-radius:5px;padding:4px 6px;font-size:11px;font-weight:700;
                      font-family:var(--font-main);cursor:pointer;outline:none;">
-              <option value="" style="background:#1a1a2e;color:#fff;">Semua</option>
+              <option value="" style="background:#1a1a2e;color:#fff;">Semua Tahun</option>
             </select>
           </div>
-          <div class="card-label" id="year-summary-title" style="opacity:.65;margin-bottom:6px;font-size:11px;letter-spacing:.5px;">RINGKASAN TAHUN INI</div>
-          <div style="margin-bottom:5px;">
-            <div style="font-size:9px;opacity:.5;margin-bottom:1px;">PEMASUKAN</div>
-            <div id="year-sum-masuk" style="font-size:16px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#7dcea0;letter-spacing:.5px;">Rp. 0</div>
+          <div class="card-label" id="year-summary-title" style="opacity:.65;margin-bottom:5px;font-size:10px;letter-spacing:.5px;">RINGKASAN TAHUN INI</div>
+          <div style="margin-bottom:4px;">
+            <div style="font-size:9px;opacity:.5;">PEMASUKAN</div>
+            <div id="year-sum-masuk" style="font-size:15px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#7dcea0;">Rp. 0</div>
           </div>
-          <div style="margin-bottom:7px;">
-            <div style="font-size:9px;opacity:.5;margin-bottom:1px;">PENGELUARAN</div>
-            <div id="year-sum-keluar" style="font-size:16px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#f1948a;letter-spacing:.5px;">Rp. 0</div>
+          <div style="margin-bottom:6px;">
+            <div style="font-size:9px;opacity:.5;">PENGELUARAN</div>
+            <div id="year-sum-keluar" style="font-size:15px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#f1948a;">Rp. 0</div>
           </div>
-          <div style="border-top:1px solid rgba(255,255,255,.12);padding-top:6px;">
-            <div style="font-size:9px;opacity:.5;margin-bottom:4px;">KESELURUHAN SEMUA TAHUN</div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-              <span style="font-size:10px;color:#7dcea0;">Pemasukan</span>
-              <span id="all-sum-masuk" style="font-size:11px;font-weight:700;color:#7dcea0;">Rp. 0</span>
+          <div style="border-top:1px solid rgba(255,255,255,.12);padding-top:5px;">
+            <div style="font-size:9px;opacity:.5;margin-bottom:3px;">SEMUA TAHUN</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+              <span style="font-size:10px;color:#7dcea0;">Masuk</span>
+              <span id="all-sum-masuk" style="font-size:10px;font-weight:700;color:#7dcea0;">Rp. 0</span>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-              <span style="font-size:10px;color:#f1948a;">Pengeluaran</span>
-              <span id="all-sum-keluar" style="font-size:11px;font-weight:700;color:#f1948a;">Rp. 0</span>
+            <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+              <span style="font-size:10px;color:#f1948a;">Keluar</span>
+              <span id="all-sum-keluar" style="font-size:10px;font-weight:700;color:#f1948a;">Rp. 0</span>
             </div>
-            <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.08);padding-top:3px;margin-top:2px;">
+            <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.08);padding-top:2px;margin-top:2px;">
               <span style="font-size:10px;opacity:.55;">Selisih</span>
-              <span id="all-sum-selisih" style="font-size:11px;font-weight:700;">Rp. 0</span>
+              <span id="all-sum-selisih" style="font-size:10px;font-weight:700;">Rp. 0</span>
             </div>
           </div>
           <div id="year-active-label" style="display:none;"></div>
@@ -2230,7 +2254,7 @@ table tbody tr:hover { background: #fafafa; }
         </div>
         <div class="form-group">
           <label>Jenis *</label>
-          <select id="tr-jenis" onchange="updateTransaksiColor();toggleTargetField()">
+          <select id="tr-jenis" onchange="updateTransaksiColor();toggleTargetField();populateKategoriByJenis(this.value)">
             <option value="">-- Pilih --</option>
             <option value="Pemasukan">🟢 Pemasukan</option>
             <option value="Pengeluaran">🔴 Pengeluaran</option>
@@ -3861,7 +3885,7 @@ let mainChart = null;
 let currentChartPeriod = 'bulan';
 
 function updateDashboard() {
-  updateCards();
+  updateCards(); // includes updateDashNotif
   initChart();
   initCalendar();
   updateChartSummary();
@@ -4020,26 +4044,70 @@ function renderYearFilterCards() {
   }
 }
 
+// Custom date filter per card
+const cardCustomDates = {0: null, 4: null}; // 0=masuk-hari, 4=keluar-hari
+
+function setCardCustomDate(idx, dateVal) {
+  cardCustomDates[idx] = dateVal || null;
+  updateCards();
+}
+
+function getFilteredTotalCustom(jenis, periode, customDate) {
+  const now = new Date();
+  const useYear = dashYearFilter || now.getFullYear();
+
+  return store.transaksi.filter(t => {
+    if (t.jenis !== jenis) return false;
+    if (dashYearFilter && new Date(t.tgl).getFullYear() !== dashYearFilter) return false;
+    const d = new Date(t.tgl);
+
+    if (customDate) return t.tgl === customDate;
+    if (periode === 'hari') return d.toDateString() === now.toDateString();
+    if (periode === 'minggu') {
+      const ws = new Date(now); ws.setDate(now.getDate()-6); ws.setHours(0,0,0,0);
+      return d >= ws;
+    }
+    if (periode === 'bulan') return d.getMonth()===now.getMonth() && d.getFullYear()===useYear;
+    if (periode === 'tahun') return d.getFullYear()===useYear;
+    return true;
+  }).reduce((s,t)=>s+t.nominal,0);
+}
+
 function updateCards() {
-  // Normal cards (index 0-2, 4-6)
-  const normalIds = [
-    {idx:0, id:'card-masuk-hari', jenis:'Pemasukan'},
-    {idx:1, id:'card-masuk-bulan', jenis:'Pemasukan'},
-    {idx:2, id:'card-masuk-tahun', jenis:'Pemasukan'},
-    {idx:4, id:'card-keluar-hari', jenis:'Pengeluaran'},
-    {idx:5, id:'card-keluar-bulan', jenis:'Pengeluaran'},
-    {idx:6, id:'card-keluar-tahun', jenis:'Pengeluaran'},
-  ];
-  normalIds.forEach(({idx, id, jenis}) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = fmtRp(getFilteredTotal(jenis, cardPeriods[idx]));
-  });
+  const now = new Date();
+  const useYear = dashYearFilter || now.getFullYear();
+  const bulanNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  const bulanNow = bulanNames[now.getMonth()];
+
+  // Set label info
+  const setTxt = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  setTxt('lbl-minggu-range', '7 hari terakhir');
+  setTxt('lbl-bulan-name', `Bulan ${bulanNow} ${useYear}`);
+  setTxt('lbl-tahun-name', `Tahun ${useYear}`);
+  setTxt('lbl-bulan-keluar', `Bulan ${bulanNow} ${useYear}`);
+  setTxt('lbl-tahun-keluar', `Tahun ${useYear}`);
+
+  // Fill card values
+  const setV = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=fmtRp(v); };
+  setV('card-masuk-hari',   getFilteredTotalCustom('Pemasukan','hari', cardCustomDates[0]));
+  setV('card-masuk-minggu', getFilteredTotalCustom('Pemasukan','minggu', null));
+  setV('card-masuk-bulan',  getFilteredTotalCustom('Pemasukan','bulan', null));
+  setV('card-masuk-tahun',  getFilteredTotalCustom('Pemasukan','tahun', null));
+  setV('card-keluar-hari',  getFilteredTotalCustom('Pengeluaran','hari', cardCustomDates[4]));
+  setV('card-keluar-minggu',getFilteredTotalCustom('Pengeluaran','minggu', null));
+  setV('card-keluar-bulan', getFilteredTotalCustom('Pengeluaran','bulan', null));
+  setV('card-keluar-tahun', getFilteredTotalCustom('Pengeluaran','tahun', null));
+
+  // Set default date on date pickers
+  const mhTgl = document.getElementById('filter-masuk-hari-tgl');
+  if (mhTgl && !mhTgl.value) mhTgl.value = today();
+  const khTgl = document.getElementById('filter-keluar-hari-tgl');
+  if (khTgl && !khTgl.value) khTgl.value = today();
 
   // Yearly filter cards
   renderYearFilterCards();
 
-  // Total saldo kartu hitam kiri
+  // Total saldo
   const allDomCards = getAllDompet();
   const totalAll = allDomCards.reduce((s,d)=>s+d.saldo,0);
   const totalTunai = allDomCards.filter(d=>d.tipe==='tunai').reduce((s,d)=>s+d.saldo,0);
@@ -4050,9 +4118,73 @@ function updateCards() {
   setS('dash-saldo-tunai', totalTunai);
   setS('dash-saldo-ewallet', totalEwallet);
   setS('dash-saldo-bank', totalBank);
-  // Keep old dash-dom-total for compatibility
   const domTotalEl = document.getElementById('dash-dom-total');
   if (domTotalEl) domTotalEl.textContent = fmtRpShort(totalAll);
+
+  // Update notification panel
+  updateDashNotif();
+}
+
+function updateDashNotif() {
+  const now = new Date();
+  const soon7 = new Date(now.getTime() + 7*24*60*60*1000);
+  const soon3 = new Date(now.getTime() + 3*24*60*60*1000);
+  const notifEl = document.getElementById('dash-notif-list');
+  const badge = document.getElementById('notif-badge');
+  if (!notifEl) return;
+
+  let items = [];
+
+  // Hutang overdue
+  (store.hutang||[]).filter(h=>h.status!=='Lunas'&&h.jatuh&&new Date(h.jatuh)<now).forEach(h=>{
+    items.push({color:'#ff6b6b', icon:'🔴', text:`<strong>${h.kontak}</strong> — ${h.ket} <span style="color:#ff6b6b">JATUH TEMPO!</span>`, urgent:true});
+  });
+
+  // Cicilan H-3
+  (store.hutang||[]).filter(h=>{
+    if(h.status==='Lunas'||h.tipeHutang!=='cicilan') return false;
+    const next = getNextCicilanDate(h);
+    return next && new Date(next) <= soon3;
+  }).forEach(h=>{
+    const next = getNextCicilanDate(h);
+    items.push({color:'#ffa502', icon:'⚠️', text:`Cicilan <strong>${h.ket}</strong> — ${fmtRpShort(h.cicilanPerBulan)} jatuh tempo <strong>${fmtDate(next)}</strong>`, urgent:true});
+  });
+
+  // Cicilan H-7
+  (store.hutang||[]).filter(h=>{
+    if(h.status==='Lunas'||h.tipeHutang!=='cicilan') return false;
+    const next = getNextCicilanDate(h);
+    return next && new Date(next) > soon3 && new Date(next) <= soon7;
+  }).forEach(h=>{
+    const next = getNextCicilanDate(h);
+    items.push({color:'#eccc68', icon:'📅', text:`Cicilan <strong>${h.ket}</strong> — ${fmtRpShort(h.cicilanPerBulan)} tgl <strong>${fmtDate(next)}</strong>`, urgent:false});
+  });
+
+  // Admin rekening bulan ini
+  (store.rekening||[]).forEach(r=>{
+    if(!r.adminBulanan || !r.tglAdmin) return;
+    const tglNow = now.getDate();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    if(r.lastAdminMonth === thisMonth) return; // already paid
+    const daysLeft = r.tglAdmin - tglNow;
+    if(daysLeft >= 0 && daysLeft <= 5) {
+      items.push({color:'#74b9ff', icon:'🏦', text:`Admin <strong>${r.nama}</strong> ${fmtRpShort(r.adminBulanan)} — ${daysLeft===0?'HARI INI!':daysLeft+' hari lagi'}`, urgent:daysLeft<=1});
+    }
+  });
+
+  if (badge) badge.style.display = items.length > 0 ? 'inline' : 'none';
+
+  if (items.length === 0) {
+    notifEl.innerHTML = '<div style="color:rgba(255,255,255,.35);font-size:11px;">✅ Tidak ada notifikasi</div>';
+    return;
+  }
+
+  notifEl.innerHTML = items.map(it=>
+    `<div style="display:flex;gap:6px;margin-bottom:6px;padding:5px 7px;background:rgba(255,255,255,.06);border-left:3px solid ${it.color};border-radius:3px;">
+      <span>${it.icon}</span>
+      <span style="color:rgba(255,255,255,.85);font-size:11px;">${it.text}</span>
+    </div>`
+  ).join('');
 }
 
 function setCardFilter(cardIndex, periode, btn) {
@@ -4245,6 +4377,22 @@ function updateChartSummary() {
 // CALENDAR
 // ===========================
 let calDate = new Date();
+
+function populateKategoriByJenis(jenis) {
+  const sel = document.getElementById('tr-kategori');
+  if (!sel) return;
+  const cur = sel.value;
+  if (!jenis) {
+    sel.innerHTML = '<option value="">-- Pilih jenis dulu --</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+  store.kategori
+    .filter(k => k.jenis === jenis)
+    .forEach(k => {
+      sel.innerHTML += `<option value="${k.nama}" ${cur===k.nama?'selected':''}>${k.icon||'💰'} ${k.nama}</option>`;
+    });
+}
 
 function toggleTargetField() {
   const jenis = document.getElementById('tr-jenis')?.value;
@@ -4708,7 +4856,11 @@ function editTransaksi(id) {
   // Set kategori
   renderTransaksi();
   setTimeout(()=>{
-    document.getElementById('tr-kategori').value = t.kat;
+    // Populate kategori filtered by jenis first
+    populateKategoriByJenis(t.jenis);
+    setTimeout(()=>{
+      document.getElementById('tr-kategori').value = t.kat;
+    }, 20);
     // Populate sumber dana
     populateSumberDana();
     if (t.sumberId) document.getElementById('tr-sumber').value = t.sumberId;
@@ -5803,6 +5955,7 @@ function populateSumberDana() {
   const sel = document.getElementById('tr-sumber');
   if (!sel) return;
   const cur = sel.value;
+  const jenis = document.getElementById('tr-jenis')?.value;
   sel.innerHTML = '<option value="">-- Pilih Sumber / Tujuan Dana (Opsional) --</option>';
 
   // Group: Rekening Bank
@@ -6601,16 +6754,17 @@ function openModal(id, title) {
 
   // Reload kategori in transaksi modal
   if (id === 'modalTransaksi') {
-    const sel = document.getElementById('tr-kategori');
-    sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
-    store.kategori.forEach(k => {
-      sel.innerHTML += `<option value="${k.nama}">${k.icon||'💰'} ${k.nama}</option>`;
-    });
-    // Populate sumber dana dropdown
+    // Kategori will be populated when jenis is selected
     populateSumberDana();
-    // Reset color + target field
     updateTransaksiColor();
     toggleTargetField();
+    // If jenis already selected (edit mode), populate kategori
+    const jenis = document.getElementById('tr-jenis')?.value;
+    if (jenis) populateKategoriByJenis(jenis);
+    else {
+      const sel = document.getElementById('tr-kategori');
+      sel.innerHTML = '<option value="">-- Pilih jenis dulu --</option>';
+    }
   }
 
   // Populate rekening in ATM modal
